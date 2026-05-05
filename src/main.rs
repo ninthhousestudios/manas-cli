@@ -5,6 +5,7 @@ mod adapter;
 mod binding;
 mod cmd;
 mod config;
+mod skill;
 
 #[derive(Parser)]
 #[command(name = "manas", version, about = "Ops surface for the manas ecosystem")]

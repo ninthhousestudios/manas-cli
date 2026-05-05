@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 pub struct ManasConfig {
     pub manas_dir: PathBuf,
     pub mcpjungle_url: String,
+    pub sangha_url: String,
 }
 
 #[allow(dead_code)]
@@ -14,10 +15,13 @@ impl ManasConfig {
         let manas_dir = PathBuf::from(&home).join(".manas");
         let mcpjungle_url = std::env::var("MANAS_MCPJUNGLE_URL")
             .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string());
+        let sangha_url = std::env::var("MANAS_SANGHA_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:4100".to_string());
 
         Ok(Self {
             manas_dir,
             mcpjungle_url,
+            sangha_url,
         })
     }
 
