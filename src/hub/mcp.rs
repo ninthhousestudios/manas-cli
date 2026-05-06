@@ -95,38 +95,49 @@ pub async fn handle_mcp(
     headers: HeaderMap,
     body: String,
 ) -> impl IntoResponse {
+    let wants_sse = headers
+        .get("accept")
+        .and_then(|v| v.to_str().ok())
+        .map(|a| a.contains("text/event-stream"))
+        .unwrap_or(false);
+
     let req: JsonRpcRequest = match serde_json::from_str(&body) {
         Ok(r) => r,
         Err(e) => {
             let resp = JsonRpcResponse::error(None, -32700, format!("parse error: {e}"));
-            return sse_wrap(resp);
+            return wrap(resp, wants_sse, "manas-hub");
         }
     };
 
     if req.jsonrpc != "2.0" {
         let resp = JsonRpcResponse::error(req.id, -32600, "invalid jsonrpc version".into());
-        return sse_wrap(resp);
+        return wrap(resp, wants_sse, "manas-hub");
     }
+
+    let is_initialize = req.method == "initialize";
 
     let resp = match req.method.as_str() {
         "initialize" => handle_initialize(req.id),
-        "notifications/initialized" => return (StatusCode::OK, "").into_response(),
+        "notifications/initialized" => {
+            return (StatusCode::OK, [("content-type", "application/json")], "")
+                .into_response();
+        }
         "tools/list" => handle_tools_list(req.id),
         "tools/call" => handle_tools_call(req.id, req.params, &state).await,
         _ => JsonRpcResponse::error(req.id, -32601, format!("method not found: {}", req.method)),
     };
 
-    let session_id = headers
-        .get("mcp-session-id")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("manas-hub");
+    let session_id = if is_initialize {
+        uuid::Uuid::now_v7().to_string()
+    } else {
+        headers
+            .get("mcp-session-id")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("manas-hub")
+            .to_string()
+    };
 
-    let mut response = sse_wrap(resp);
-    response.headers_mut().insert(
-        "mcp-session-id",
-        session_id.parse().unwrap_or_else(|_| "manas-hub".parse().unwrap()),
-    );
-    response
+    wrap(resp, wants_sse, &session_id)
 }
 
 fn handle_initialize(id: Option<serde_json::Value>) -> JsonRpcResponse {
@@ -241,16 +252,32 @@ async fn ingest(state: &HubState, args: serde_json::Value) -> anyhow::Result<Str
     }
 }
 
-fn sse_wrap(resp: JsonRpcResponse) -> axum::response::Response {
+fn wrap(resp: JsonRpcResponse, sse: bool, session_id: &str) -> axum::response::Response {
     let json = serde_json::to_string(&resp).unwrap();
-    let body = format!("event: message\ndata: {json}\n\n");
-    (
-        StatusCode::OK,
-        [
-            ("content-type", "text/event-stream"),
-            ("cache-control", "no-cache"),
-        ],
-        body,
-    )
-        .into_response()
+
+    let mut response = if sse {
+        let body = format!("event: message\ndata: {json}\n\n");
+        (
+            StatusCode::OK,
+            [
+                ("content-type", "text/event-stream"),
+                ("cache-control", "no-cache"),
+            ],
+            body,
+        )
+            .into_response()
+    } else {
+        (
+            StatusCode::OK,
+            [("content-type", "application/json")],
+            json,
+        )
+            .into_response()
+    };
+
+    response.headers_mut().insert(
+        "mcp-session-id",
+        session_id.parse().unwrap_or_else(|_| "manas-hub".parse().unwrap()),
+    );
+    response
 }

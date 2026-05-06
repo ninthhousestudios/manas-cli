@@ -10,12 +10,13 @@ use crate::binding::Binding;
 pub struct CodexCliAdapter;
 
 impl CodexCliAdapter {
-    fn codex_home(binding: &Binding) -> PathBuf {
-        scratch_dir(binding).join("codex")
+    fn codex_home() -> PathBuf {
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());
+        PathBuf::from(home).join(".manas").join("codex")
     }
 
     fn write_mcp_config(binding: &Binding) -> Result<PathBuf> {
-        let codex_home = Self::codex_home(binding);
+        let codex_home = Self::codex_home();
         std::fs::create_dir_all(&codex_home)?;
         let config_path = codex_home.join("config.toml");
 
@@ -48,7 +49,7 @@ impl HarnessAdapter for CodexCliAdapter {
             cmd.stdin(Stdio::null());
         }
 
-        cmd.env("CODEX_HOME", Self::codex_home(binding));
+        cmd.env("CODEX_HOME", Self::codex_home());
 
         for (key, val) in binding.env_vars() {
             cmd.env(&key, &val);
