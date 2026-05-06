@@ -17,20 +17,20 @@ impl ClaudeCodeAdapter {
         let config_path = Self::mcp_config_path(binding);
         std::fs::create_dir_all(config_path.parent().unwrap())?;
 
-        let mut server_config = serde_json::json!({
-            "type": "http",
-            "url": &binding.mcp_endpoint,
-        });
-
-        if let Some(ref token) = binding.mcp_token {
-            server_config["headers"] = serde_json::json!({
-                "Authorization": format!("Bearer {}", token),
-            });
-        }
-
         let config = serde_json::json!({
             "mcpServers": {
-                "manas": server_config,
+                "manas": {
+                    "type": "http",
+                    "url": format!("{}/mcp", binding.manas_url),
+                },
+                "chitta": {
+                    "type": "http",
+                    "url": format!("{}/mcp", binding.chitta_url),
+                },
+                "yojana": {
+                    "type": "http",
+                    "url": format!("{}/mcp", binding.yojana_url),
+                },
             }
         });
 

@@ -5,7 +5,7 @@ fn done_fails_gracefully_without_sangha() {
     let bin = env!("CARGO_BIN_EXE_manas");
     let output = Command::new(bin)
         .arg("done")
-        .env("MANAS_MCPJUNGLE_URL", "http://127.0.0.1:9999")
+        .env("MANAS_CHITTA_URL", "http://127.0.0.1:9999")
         .env("MANAS_SANGHA_URL", "http://127.0.0.1:9998")
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .output()
@@ -44,7 +44,7 @@ fn done_transcript_path_injected_from_env() {
     let bin = env!("CARGO_BIN_EXE_manas");
     let output = Command::new(bin)
         .arg("done")
-        .env("MANAS_MCPJUNGLE_URL", "http://127.0.0.1:9999")
+        .env("MANAS_CHITTA_URL", "http://127.0.0.1:9999")
         .env("MANAS_SANGHA_URL", "http://127.0.0.1:9998")
         .env("MANAS_TRANSCRIPT_PATH", "/tmp/test-transcript.jsonl")
         .current_dir(env!("CARGO_MANIFEST_DIR"))

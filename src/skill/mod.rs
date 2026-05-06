@@ -116,11 +116,14 @@ mod tests {
     }
 
     fn test_binding() -> Binding {
-        Binding::new(
-            crate::binding::BootMode::Rich,
-            "http://localhost:8080",
-            PathBuf::from("/tmp/test-project"),
-        )
+        let config = crate::config::ManasConfig {
+            manas_dir: PathBuf::from("/tmp/manas"),
+            chitta_url: "http://localhost:3100".into(),
+            yojana_url: "http://localhost:4200".into(),
+            sangha_url: "http://localhost:3200".into(),
+            serve_port: 3000,
+        };
+        Binding::new(&config, PathBuf::from("/tmp/test-project"))
     }
 
     #[tokio::test]

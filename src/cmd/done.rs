@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 
 use crate::adapter::claude_code::ClaudeCodeAdapter;
 use crate::adapter::HarnessAdapter;
-use crate::binding::{Binding, BootMode};
+use crate::binding::Binding;
 use crate::config::ManasConfig;
 use crate::skill::lock::{LockScope, SanghaLockClient};
 use crate::skill::{SkillDef, SkillShell};
@@ -15,9 +15,8 @@ pub async fn run() -> Result<()> {
     let config = ManasConfig::load()?;
     let project_root = std::env::current_dir().context("cannot determine project root")?;
 
-    let mut binding = Binding::new(BootMode::Rich, &config.mcpjungle_url, project_root.clone());
+    let mut binding = Binding::new(&config, project_root.clone());
 
-    // Resolve transcript path: env override > adapter detection > none
     let transcript_path = resolve_transcript_path(&binding);
     binding.transcript_path = transcript_path;
 

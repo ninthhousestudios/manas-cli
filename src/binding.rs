@@ -2,53 +2,25 @@ use std::path::PathBuf;
 
 use uuid::Uuid;
 
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub enum BootMode {
-    Minimal,
-    Rich,
-}
-
-impl BootMode {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Minimal => "minimal",
-            Self::Rich => "rich",
-        }
-    }
-
-    pub fn tool_group(&self) -> &'static str {
-        match self {
-            Self::Minimal => "code",
-            Self::Rich => "full",
-        }
-    }
-}
+use crate::config::ManasConfig;
 
 #[derive(Debug, Clone)]
 pub struct Binding {
     pub session_id: Uuid,
-    pub mode: BootMode,
-    pub mcp_endpoint: String,
-    pub mcp_token: Option<String>,
+    pub manas_url: String,
+    pub chitta_url: String,
+    pub yojana_url: String,
     pub project_root: PathBuf,
     pub transcript_path: Option<PathBuf>,
 }
 
 impl Binding {
-    pub fn new(mode: BootMode, mcpjungle_url: &str, project_root: PathBuf) -> Self {
-        let session_id = Uuid::now_v7();
-        let mcp_endpoint = format!(
-            "{}/v0/groups/{}/mcp",
-            mcpjungle_url.trim_end_matches('/'),
-            mode.tool_group()
-        );
-
+    pub fn new(config: &ManasConfig, project_root: PathBuf) -> Self {
         Self {
-            session_id,
-            mode,
-            mcp_endpoint,
-            mcp_token: None,
+            session_id: Uuid::now_v7(),
+            manas_url: config.serve_url(),
+            chitta_url: config.chitta_url.clone(),
+            yojana_url: config.yojana_url.clone(),
             project_root,
             transcript_path: None,
         }
@@ -56,18 +28,15 @@ impl Binding {
 
     pub fn env_vars(&self) -> Vec<(String, String)> {
         let mut vars = vec![
-            ("MANAS_MCP_ENDPOINT".into(), self.mcp_endpoint.clone()),
             ("MANAS_SESSION_ID".into(), self.session_id.to_string()),
             (
                 "MANAS_PROJECT_ROOT".into(),
                 self.project_root.display().to_string(),
             ),
-            ("MANAS_BOOT_MODE".into(), self.mode.as_str().into()),
+            ("MANAS_URL".into(), self.manas_url.clone()),
+            ("MANAS_CHITTA_URL".into(), self.chitta_url.clone()),
+            ("MANAS_YOJANA_URL".into(), self.yojana_url.clone()),
         ];
-
-        if let Some(ref token) = self.mcp_token {
-            vars.push(("MANAS_MCP_TOKEN".into(), token.clone()));
-        }
 
         if let Some(ref path) = self.transcript_path {
             vars.push((

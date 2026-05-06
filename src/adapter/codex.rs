@@ -19,14 +19,12 @@ impl CodexCliAdapter {
         std::fs::create_dir_all(&codex_home)?;
         let config_path = codex_home.join("config.toml");
 
-        let mut toml = format!(
-            "[mcp_servers.manas]\nurl = \"{}\"\n",
-            binding.mcp_endpoint
+        let toml = format!(
+            "[mcp_servers.manas]\nurl = \"{}/mcp\"\n\n\
+             [mcp_servers.chitta]\nurl = \"{}/mcp\"\n\n\
+             [mcp_servers.yojana]\nurl = \"{}/mcp\"\n",
+            binding.manas_url, binding.chitta_url, binding.yojana_url,
         );
-
-        if binding.mcp_token.is_some() {
-            toml.push_str("bearer_token_env_var = \"MANAS_MCP_TOKEN\"\n");
-        }
 
         std::fs::write(&config_path, &toml)?;
         Ok(config_path)

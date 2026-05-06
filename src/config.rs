@@ -4,8 +4,10 @@ use anyhow::{Context, Result};
 
 pub struct ManasConfig {
     pub manas_dir: PathBuf,
-    pub mcpjungle_url: String,
+    pub chitta_url: String,
+    pub yojana_url: String,
     pub sangha_url: String,
+    pub serve_port: u16,
 }
 
 #[allow(dead_code)]
@@ -13,16 +15,28 @@ impl ManasConfig {
     pub fn load() -> Result<Self> {
         let home = std::env::var("HOME").context("HOME not set")?;
         let manas_dir = PathBuf::from(&home).join(".manas");
-        let mcpjungle_url = std::env::var("MANAS_MCPJUNGLE_URL")
-            .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string());
+        let chitta_url = std::env::var("MANAS_CHITTA_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:3100".to_string());
+        let yojana_url = std::env::var("MANAS_YOJANA_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:4200".to_string());
         let sangha_url = std::env::var("MANAS_SANGHA_URL")
             .unwrap_or_else(|_| "http://127.0.0.1:3200".to_string());
+        let serve_port = std::env::var("MANAS_SERVE_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(3000);
 
         Ok(Self {
             manas_dir,
-            mcpjungle_url,
+            chitta_url,
+            yojana_url,
             sangha_url,
+            serve_port,
         })
+    }
+
+    pub fn serve_url(&self) -> String {
+        format!("http://127.0.0.1:{}", self.serve_port)
     }
 
     pub fn admin_token(&self) -> Result<Option<String>> {

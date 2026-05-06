@@ -5,6 +5,7 @@ mod adapter;
 mod binding;
 mod cmd;
 mod config;
+mod hub;
 mod skill;
 
 #[derive(Parser)]
@@ -16,9 +17,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Check health of mcpjungle and all upstream subsystems
+    /// Check health of manas subsystems (chitta, yojana, sangha)
     Health,
-    /// Boot a rich session (full Tool Group binding, memory, handoff)
+    /// Boot a rich session (memory, handoff, task context)
     Warm,
     /// Session shutdown: store observations, write handoff, revoke binding
     Done,
@@ -26,6 +27,11 @@ enum Command {
     Reflect,
     /// Show active sessions, bindings, and lock state
     Status,
+    /// Run the manas HTTP MCP server (composed tools: wake_up, ingest)
+    Serve {
+        #[arg(short, long, default_value = "3000")]
+        port: u16,
+    },
 }
 
 #[tokio::main]
@@ -38,5 +44,6 @@ async fn main() -> Result<()> {
         Command::Done => cmd::done::run().await,
         Command::Reflect => cmd::reflect::run().await,
         Command::Status => cmd::status::run().await,
+        Command::Serve { port } => cmd::serve::run(port).await,
     }
 }
