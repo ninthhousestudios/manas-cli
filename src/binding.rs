@@ -32,6 +32,7 @@ pub struct Binding {
     pub mcp_endpoint: String,
     pub mcp_token: Option<String>,
     pub project_root: PathBuf,
+    pub transcript_path: Option<PathBuf>,
 }
 
 impl Binding {
@@ -49,6 +50,7 @@ impl Binding {
             mcp_endpoint,
             mcp_token: None,
             project_root,
+            transcript_path: None,
         }
     }
 
@@ -65,6 +67,13 @@ impl Binding {
 
         if let Some(ref token) = self.mcp_token {
             vars.push(("MANAS_MCP_TOKEN".into(), token.clone()));
+        }
+
+        if let Some(ref path) = self.transcript_path {
+            vars.push((
+                "MANAS_TRANSCRIPT_PATH".into(),
+                path.display().to_string(),
+            ));
         }
 
         vars

@@ -16,7 +16,7 @@ impl ManasConfig {
         let mcpjungle_url = std::env::var("MANAS_MCPJUNGLE_URL")
             .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string());
         let sangha_url = std::env::var("MANAS_SANGHA_URL")
-            .unwrap_or_else(|_| "http://127.0.0.1:4100".to_string());
+            .unwrap_or_else(|_| "http://127.0.0.1:3200".to_string());
 
         Ok(Self {
             manas_dir,
