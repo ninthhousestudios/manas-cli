@@ -1,15 +1,24 @@
 use anyhow::{bail, Result};
 
 use crate::adapter::claude_code::ClaudeCodeAdapter;
+use crate::adapter::codex::CodexCliAdapter;
+use crate::adapter::gemini::GeminiCliAdapter;
 use crate::adapter::HarnessAdapter;
 use crate::binding::Binding;
 use crate::config::ManasConfig;
 
-pub async fn run() -> Result<()> {
+pub async fn run(harness: &str) -> Result<()> {
     let config = ManasConfig::load()?;
 
     let project_root = std::env::current_dir()?;
     let binding = Binding::new(&config, project_root);
+
+    let adapter: Box<dyn HarnessAdapter> = match harness {
+        "claude-code" | "cc" => Box::new(ClaudeCodeAdapter),
+        "codex" => Box::new(CodexCliAdapter),
+        "gemini" => Box::new(GeminiCliAdapter),
+        _ => bail!("unknown harness: {harness} (expected: claude-code, codex, gemini)"),
+    };
 
     println!("manas warm — booting rich session");
     println!("  session:  {}", binding.session_id);
@@ -17,8 +26,6 @@ pub async fn run() -> Result<()> {
     println!("  chitta:   {}", binding.chitta_url);
     println!("  yojana:   {}", binding.yojana_url);
     println!("  project:  {}", binding.project_root.display());
-
-    let adapter = ClaudeCodeAdapter;
     println!("  adapter:  {}", adapter.name());
     println!();
 

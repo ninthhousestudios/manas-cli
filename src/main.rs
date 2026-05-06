@@ -20,7 +20,11 @@ enum Command {
     /// Check health of manas subsystems (chitta, yojana, sangha)
     Health,
     /// Boot a rich session (memory, handoff, task context)
-    Warm,
+    Warm {
+        /// Harness to launch: claude-code, codex, gemini
+        #[arg(default_value = "claude-code")]
+        harness: String,
+    },
     /// Session shutdown: store observations, write handoff, revoke binding
     Done,
     /// Between-session maintenance: consolidate observations into mental models
@@ -40,7 +44,7 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Command::Health => cmd::health::run().await,
-        Command::Warm => cmd::warm::run().await,
+        Command::Warm { harness } => cmd::warm::run(&harness).await,
         Command::Done => cmd::done::run().await,
         Command::Reflect => cmd::reflect::run().await,
         Command::Status => cmd::status::run().await,
