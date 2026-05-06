@@ -42,14 +42,11 @@ impl HarnessAdapter for CodexCliAdapter {
             .context("failed to write MCP config for Codex CLI")?;
 
         let mut cmd = Command::new("codex");
-        cmd.arg("exec");
 
         if let Some(p) = prompt {
-            cmd.arg(p);
+            cmd.arg("exec").arg(p);
+            cmd.stdin(Stdio::null());
         }
-
-        cmd.arg("--skip-git-repo-check")
-            .arg("--dangerously-bypass-approvals-and-sandbox");
 
         cmd.env("CODEX_HOME", Self::codex_home(binding));
 
@@ -58,7 +55,6 @@ impl HarnessAdapter for CodexCliAdapter {
         }
 
         cmd.current_dir(&binding.project_root);
-        cmd.stdin(Stdio::null());
 
         let child = cmd
             .spawn()
