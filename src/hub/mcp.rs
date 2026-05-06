@@ -119,8 +119,7 @@ pub async fn handle_mcp(
     let resp = match req.method.as_str() {
         "initialize" => handle_initialize(req.id),
         "notifications/initialized" => {
-            return (StatusCode::OK, [("content-type", "application/json")], "")
-                .into_response();
+            return StatusCode::ACCEPTED.into_response();
         }
         "tools/list" => handle_tools_list(req.id),
         "tools/call" => handle_tools_call(req.id, req.params, &state).await,

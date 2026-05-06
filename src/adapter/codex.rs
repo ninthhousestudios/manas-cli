@@ -15,6 +15,37 @@ impl CodexCliAdapter {
         PathBuf::from(home).join(".manas").join("codex")
     }
 
+    fn chitta_token() -> Result<Option<String>> {
+        if let Ok(token) = std::env::var("CHITTA_TOKEN") {
+            return Ok(Some(token));
+        }
+
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());
+        let candidates = [
+            PathBuf::from(&home)
+                .join(".chitta")
+                .join("bearer-token.txt"),
+            PathBuf::from(&home)
+                .join(".config")
+                .join("chitta")
+                .join("bearer-token.txt"),
+        ];
+
+        for path in candidates {
+            match std::fs::read_to_string(&path) {
+                Ok(token) => return Ok(Some(token.trim().to_string())),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(e) => {
+                    return Err(e).with_context(|| {
+                        format!("failed to read chitta token from {}", path.display())
+                    });
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
     fn write_mcp_config(binding: &Binding) -> Result<PathBuf> {
         let codex_home = Self::codex_home();
         std::fs::create_dir_all(&codex_home)?;
@@ -23,6 +54,7 @@ impl CodexCliAdapter {
         let toml = format!(
             "[mcp_servers.manas]\nurl = \"{}/mcp\"\n\n\
              [mcp_servers.chitta]\nurl = \"{}/mcp\"\n\n\
+             bearer_token_env_var = \"CHITTA_TOKEN\"\n\n\
              [mcp_servers.yojana]\nurl = \"{}/mcp\"\n",
             binding.manas_url, binding.chitta_url, binding.yojana_url,
         );
@@ -53,6 +85,10 @@ impl HarnessAdapter for CodexCliAdapter {
 
         for (key, val) in binding.env_vars() {
             cmd.env(&key, &val);
+        }
+
+        if let Some(token) = Self::chitta_token()? {
+            cmd.env("CHITTA_TOKEN", token);
         }
 
         cmd.current_dir(&binding.project_root);
