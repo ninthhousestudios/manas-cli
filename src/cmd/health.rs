@@ -14,6 +14,8 @@ pub async fn run() -> Result<()> {
         ("chitta", &config.chitta_url),
         ("yojana", &config.yojana_url),
         ("sangha", &config.sangha_url),
+        ("smriti", &config.smriti_url),
+        ("sutra", &config.sutra_url),
     ] {
         let status = match client.get(format!("{url}/health")).send().await {
             Ok(resp) if resp.status().is_success() => "ok".to_string(),

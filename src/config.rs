@@ -8,6 +8,7 @@ pub struct ManasConfig {
     pub yojana_url: String,
     pub sangha_url: String,
     pub smriti_url: String,
+    pub sutra_url: String,
     pub serve_port: u16,
 }
 
@@ -24,6 +25,8 @@ impl ManasConfig {
             .unwrap_or_else(|_| "http://127.0.0.1:3200".to_string());
         let smriti_url = std::env::var("MANAS_SMRITI_URL")
             .unwrap_or_else(|_| "http://127.0.0.1:7333".to_string());
+        let sutra_url = std::env::var("MANAS_SUTRA_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:3201".to_string());
         let serve_port = std::env::var("MANAS_SERVE_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -35,6 +38,7 @@ impl ManasConfig {
             yojana_url,
             sangha_url,
             smriti_url,
+            sutra_url,
             serve_port,
         })
     }
