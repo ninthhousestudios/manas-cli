@@ -28,6 +28,14 @@ impl GeminiCliAdapter {
                     "type": "http",
                     "url": format!("{}/mcp", binding.yojana_url),
                 },
+                "sangha": {
+                    "type": "http",
+                    "url": format!("{}/mcp", binding.sangha_url),
+                },
+                "smriti": {
+                    "type": "http",
+                    "url": format!("{}/mcp", binding.smriti_url),
+                },
             }
         });
 

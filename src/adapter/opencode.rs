@@ -6,37 +6,32 @@ use tokio::process::Command;
 use super::{HarnessAdapter, HarnessHandle};
 use crate::binding::Binding;
 
-pub struct ClaudeCodeAdapter;
+pub struct OpencodeAdapter;
 
-impl ClaudeCodeAdapter {
-    fn mcp_config_path(binding: &Binding) -> PathBuf {
-        scratch_dir(binding).join("mcp.json")
-    }
-
+impl OpencodeAdapter {
     fn write_mcp_config(binding: &Binding) -> Result<PathBuf> {
-        let config_path = Self::mcp_config_path(binding);
-        std::fs::create_dir_all(config_path.parent().unwrap())?;
+        let config_path = binding.project_root.join("opencode.json");
 
         let config = serde_json::json!({
-            "mcpServers": {
+            "mcp": {
                 "manas": {
-                    "type": "http",
+                    "type": "remote",
                     "url": format!("{}/mcp", binding.manas_url),
                 },
                 "chitta": {
-                    "type": "http",
+                    "type": "remote",
                     "url": format!("{}/mcp", binding.chitta_url),
                 },
                 "yojana": {
-                    "type": "http",
+                    "type": "remote",
                     "url": format!("{}/mcp", binding.yojana_url),
                 },
                 "sangha": {
-                    "type": "http",
+                    "type": "remote",
                     "url": format!("{}/mcp", binding.sangha_url),
                 },
                 "smriti": {
-                    "type": "http",
+                    "type": "remote",
                     "url": format!("{}/mcp", binding.smriti_url),
                 },
             }
@@ -48,24 +43,22 @@ impl ClaudeCodeAdapter {
 }
 
 #[async_trait::async_trait]
-impl HarnessAdapter for ClaudeCodeAdapter {
+impl HarnessAdapter for OpencodeAdapter {
     fn name(&self) -> &'static str {
-        "claude-code"
+        "opencode"
     }
 
     async fn launch(&self, binding: &Binding, prompt: Option<&str>) -> Result<HarnessHandle> {
-        let mcp_config = Self::write_mcp_config(binding)
-            .context("failed to write MCP config for Claude Code")?;
+        let config_path = Self::write_mcp_config(binding)
+            .context("failed to write MCP config for opencode")?;
 
-        let mut cmd = Command::new("claude");
+        let mut cmd = Command::new("opencode");
 
         if let Some(p) = prompt {
-            cmd.arg("-p").arg(p);
+            cmd.arg("run").arg(p);
         }
 
-        cmd.arg("--mcp-config")
-            .arg(&mcp_config)
-            .arg("--strict-mcp-config");
+        cmd.env("OPENCODE_CONFIG", &config_path);
 
         for (key, val) in binding.env_vars() {
             cmd.env(&key, &val);
@@ -75,27 +68,17 @@ impl HarnessAdapter for ClaudeCodeAdapter {
 
         let child = cmd
             .spawn()
-            .context("failed to spawn `claude` — is Claude Code installed?")?;
-
-        let transcript_path = self.transcript_path(binding);
+            .context("failed to spawn `opencode` — is opencode installed?")?;
 
         Ok(HarnessHandle {
             child,
-            transcript_path,
+            transcript_path: None,
             scratch_dir: scratch_dir(binding),
         })
     }
 
-    fn transcript_path(&self, binding: &Binding) -> Option<PathBuf> {
-        let home = std::env::var("HOME").ok()?;
-        let project_hash = format!("{:x}", md5_hash(binding.project_root.to_string_lossy().as_bytes()));
-        Some(
-            PathBuf::from(home)
-                .join(".claude")
-                .join("projects")
-                .join(project_hash)
-                .join(format!("{}.jsonl", binding.session_id)),
-        )
+    fn transcript_path(&self, _binding: &Binding) -> Option<PathBuf> {
+        None
     }
 
     async fn shutdown(&self, handle: &mut HarnessHandle) -> Result<()> {
@@ -104,7 +87,7 @@ impl HarnessAdapter for ClaudeCodeAdapter {
                 libc::kill(id as i32, libc::SIGTERM);
             }
         }
-        handle.child.wait().await.context("waiting for claude to exit")?;
+        handle.child.wait().await.context("waiting for opencode to exit")?;
         Ok(())
     }
 }
@@ -115,11 +98,4 @@ fn scratch_dir(binding: &Binding) -> PathBuf {
         .join(".manas")
         .join("sessions")
         .join(binding.session_id.to_string())
-}
-
-fn md5_hash(data: &[u8]) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    data.hash(&mut hasher);
-    hasher.finish()
 }
