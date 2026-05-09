@@ -1,7 +1,10 @@
 [package]
 name = "manas-cli"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
+description = "Ops CLI for the manas ecosystem"
+license = "MPL-2.0"
+repository = "https://github.com/ninthhousestudios/manas"
 
 [[bin]]
 name = "manas"

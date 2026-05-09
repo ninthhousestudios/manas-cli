@@ -14,7 +14,7 @@ pub struct SkillDef {
     pub lock_scope: LockScope,
     pub lock_ttl_secs: u64,
     pub prompt: String,
-    pub output_paths: Vec<PathBuf>,
+    pub output_paths: Vec<PathBuf>,                                                                                             
 }
 
 #[derive(Debug)]

@@ -1,6 +1,11 @@
 /target
 Cargo.lock
 .codex
+.sutra/
 
 # AgentOps session artifacts
 .agents/
+
+# Local tool/agent state files
+opencode.json
+todo.md
