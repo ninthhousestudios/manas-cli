@@ -4,7 +4,7 @@ use std::process::Stdio;
 use anyhow::{Context, Result};
 use tokio::process::Command;
 
-use super::{HarnessAdapter, HarnessHandle};
+use super::{chitta_token, HarnessAdapter, HarnessHandle};
 use crate::binding::Binding;
 
 pub struct CodexCliAdapter;
@@ -13,37 +13,6 @@ impl CodexCliAdapter {
     fn codex_home() -> PathBuf {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());
         PathBuf::from(home).join(".manas").join("codex")
-    }
-
-    fn chitta_token() -> Result<Option<String>> {
-        if let Ok(token) = std::env::var("CHITTA_TOKEN") {
-            return Ok(Some(token));
-        }
-
-        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());
-        let candidates = [
-            PathBuf::from(&home)
-                .join(".chitta")
-                .join("bearer-token.txt"),
-            PathBuf::from(&home)
-                .join(".config")
-                .join("chitta")
-                .join("bearer-token.txt"),
-        ];
-
-        for path in candidates {
-            match std::fs::read_to_string(&path) {
-                Ok(token) => return Ok(Some(token.trim().to_string())),
-                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-                Err(e) => {
-                    return Err(e).with_context(|| {
-                        format!("failed to read chitta token from {}", path.display())
-                    });
-                }
-            }
-        }
-
-        Ok(None)
     }
 
     fn write_mcp_config(binding: &Binding) -> Result<PathBuf> {
@@ -90,7 +59,7 @@ impl HarnessAdapter for CodexCliAdapter {
             cmd.env(&key, &val);
         }
 
-        if let Some(token) = Self::chitta_token()? {
+        if let Some(token) = chitta_token()? {
             cmd.env("CHITTA_TOKEN", token);
         }
 
