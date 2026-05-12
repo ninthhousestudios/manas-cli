@@ -40,10 +40,20 @@ Run the manas HTTP MCP server (default port 3000). Composes tools from multiple 
 
 manas-cli includes adapter modules for launching different AI coding agents with the manas ecosystem pre-configured:
 
-- **Claude Code** — default, stdio MCP
+- **Claude Code** — default, streamable-HTTP MCP. Injects manas session-lifecycle instructions via `--append-system-prompt-file` so they apply to the top-level session but not to subagents.
 - **Codex** — OpenAI Codex CLI
 - **Gemini** — Google Gemini CLI
 - **OpenCode** — open-source alternative
+
+### Instruction split
+
+Session-lifecycle instructions (sangha registration, chitta health checks, sutra/smriti tool preferences, yojana discipline, observation protocol) are compiled into the `manas` binary from `src/adapter/manas-instructions.md` and injected at launch via `--append-system-prompt-file`. This means:
+
+- `manas warm claude` — top-level session gets full manas operating instructions + MCP servers
+- `claude` (bare) — no manas instructions, no manas MCP servers
+- Subagents spawned via the Agent tool — inherit MCP tool access but **not** the appended system prompt, so they won't perform session-lifecycle rituals
+
+General-purpose instructions (personality, naming conventions, commit discipline) stay in `~/CLAUDE.md` and are visible to all sessions including subagents.
 
 ## License
 

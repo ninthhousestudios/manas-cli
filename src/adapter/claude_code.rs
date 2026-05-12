@@ -8,9 +8,15 @@ use crate::binding::Binding;
 
 pub struct ClaudeCodeAdapter;
 
+const MANAS_INSTRUCTIONS: &str = include_str!("manas-instructions.md");
+
 impl ClaudeCodeAdapter {
     fn mcp_config_path(binding: &Binding) -> PathBuf {
         scratch_dir(binding).join("mcp.json")
+    }
+
+    fn instructions_path(binding: &Binding) -> PathBuf {
+        scratch_dir(binding).join("manas-instructions.md")
     }
 
     fn write_mcp_config(binding: &Binding) -> Result<PathBuf> {
@@ -45,6 +51,13 @@ impl ClaudeCodeAdapter {
         std::fs::write(&config_path, serde_json::to_string_pretty(&config)?)?;
         Ok(config_path)
     }
+
+    fn write_instructions(binding: &Binding) -> Result<PathBuf> {
+        let path = Self::instructions_path(binding);
+        std::fs::create_dir_all(path.parent().unwrap())?;
+        std::fs::write(&path, MANAS_INSTRUCTIONS)?;
+        Ok(path)
+    }
 }
 
 #[async_trait::async_trait]
@@ -56,6 +69,8 @@ impl HarnessAdapter for ClaudeCodeAdapter {
     async fn launch(&self, binding: &Binding, prompt: Option<&str>) -> Result<HarnessHandle> {
         let mcp_config = Self::write_mcp_config(binding)
             .context("failed to write MCP config for Claude Code")?;
+        let instructions = Self::write_instructions(binding)
+            .context("failed to write manas instructions for Claude Code")?;
 
         let mut cmd = Command::new("claude");
 
@@ -65,7 +80,9 @@ impl HarnessAdapter for ClaudeCodeAdapter {
 
         cmd.arg("--mcp-config")
             .arg(&mcp_config)
-            .arg("--strict-mcp-config");
+            .arg("--strict-mcp-config")
+            .arg("--append-system-prompt-file")
+            .arg(&instructions);
 
         for (key, val) in binding.env_vars() {
             cmd.env(&key, &val);
