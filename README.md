@@ -32,6 +32,10 @@ Between-session maintenance: consolidate observations into mental models.
 
 Show active sessions, bindings, and lock state across subsystems.
 
+### `manas install-services`
+
+Install `~/.config/systemd/user/manas.service`, reload user systemd, and enable/start `manas serve` by default.
+
 ### `manas serve [-p PORT]`
 
 Run the manas HTTP MCP server (default port 3000). Composes tools from multiple subsystems into a single MCP endpoint.

@@ -31,6 +31,8 @@ enum Command {
     Reflect,
     /// Show active sessions, bindings, and lock state
     Status,
+    /// Install and enable user systemd services for manas
+    InstallServices,
     /// Run the manas HTTP MCP server (composed tools: wake_up, ingest)
     Serve {
         #[arg(short, long, default_value = "3000")]
@@ -48,6 +50,7 @@ async fn main() -> Result<()> {
         Command::Done => cmd::done::run().await,
         Command::Reflect => cmd::reflect::run().await,
         Command::Status => cmd::status::run().await,
+        Command::InstallServices => cmd::install_services::run().await,
         Command::Serve { port } => cmd::serve::run(port).await,
     }
 }
