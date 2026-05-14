@@ -1,3 +1,7 @@
+## First Step — Manas Wake-Up
+
+**At the start of every conversation, do this first:** call `manas_wake_up` with `project` set to the current project slug/name and `workspace_path` set to `$CWD` when available. This loads Josh's Chitta profile, current Yojana context, and refreshes/registers the Sutra code index before any other exploration.
+
 ## Yojana — Issue Tracker
 
 Yojana is a local MCP-based issue tracker running as a systemd user service on port 4200. It provides task management with state machines, edges (dependencies/relations), and context shapes for agent workflows.
@@ -44,7 +48,7 @@ For a hand-curated "next up" lane across projects, tag tasks with `now` and quer
 
 ## Sutra MCP
 
-**At session start**, call `sutra_status` with the project's root directory path. This registers the workspace (via daemon if running, local fallback otherwise) and returns status including mode, file/symbol counts, and freshness. Use `sutra_add_root` only when you need to force a reparse.
+`manas_wake_up` calls `sutra_status` for the workspace at session start. Call `sutra_status` directly later if the workspace changes or you need a fresh status check. Use `sutra_add_root` only when you need to force a reparse.
 
 Use sutra tools instead of built-in file tools for code exploration:
 
@@ -74,7 +78,7 @@ If smriti returns "database disk image is malformed", the FTS/vec virtual tables
 
 ## Sangha — Session Coordination
 
-**At the start of every conversation**, if sangha tools are available, call `mcp__sangha__session_register` with `project` set to `$CWD` and `branch` from git. Do this before other work.
+After `manas_wake_up`, if sangha tools are available, call `mcp__sangha__session_register` with `project` set to `$CWD` and `branch` from git.
 
 ## Chitta — Working Model of Josh
 
@@ -86,7 +90,7 @@ Chitta is the working model of Josh — what he values, how he works, what he pr
 - MCP endpoint: `http://127.0.0.1:3100/mcp`
 - Tools: `mcp__chitta__health_check`, `store_memory`, `get_memory`, `search_memories`, `update_memory`, `delete_memory`, `list_recent_memories`
 
-**At the start of every conversation**, call `mcp__chitta__health_check`. If it fails, **immediately tell Josh**. Then call `get_profile` to load the always-on profile (top ~30 working-model entries by effective score). If Josh gives a Chitta memory id, use `get_memory`; prefixes work. For context-specific retrieval, use `search_memories` with `applies_to` facets (domains, skills, projects, situations).
+`manas_wake_up` calls `get_profile` at session start to load the always-on profile (top ~30 working-model entries by effective score). If Chitta appears unavailable, call `mcp__chitta__health_check`; if it fails, **immediately tell Josh**. If Josh gives a Chitta memory id, use `get_memory`; prefixes work. For context-specific retrieval, use `search_memories` with `applies_to` facets (domains, skills, projects, situations).
 
 ### What goes in Chitta
 
