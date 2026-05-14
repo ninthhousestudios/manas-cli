@@ -4,7 +4,7 @@ use std::process::Stdio;
 use anyhow::{Context, Result};
 use tokio::process::Command;
 
-use super::{chitta_token, HarnessAdapter, HarnessHandle};
+use super::{HarnessAdapter, HarnessHandle, chitta_token};
 use crate::binding::Binding;
 
 pub struct CodexCliAdapter;
@@ -26,9 +26,14 @@ impl CodexCliAdapter {
              bearer_token_env_var = \"CHITTA_TOKEN\"\n\n\
              [mcp_servers.yojana]\nurl = \"{}/mcp\"\n\n\
              [mcp_servers.sangha]\nurl = \"{}/mcp\"\n\n\
-             [mcp_servers.smriti]\nurl = \"{}/mcp\"\n",
-            binding.manas_url, binding.chitta_url, binding.yojana_url,
-            binding.sangha_url, binding.smriti_url,
+             [mcp_servers.smriti]\nurl = \"{}/mcp\"\n\n\
+             [mcp_servers.sutra]\nurl = \"{}/mcp\"\n",
+            binding.manas_url,
+            binding.chitta_url,
+            binding.yojana_url,
+            binding.sangha_url,
+            binding.smriti_url,
+            binding.sutra_url,
         );
 
         std::fs::write(&config_path, &toml)?;
@@ -43,8 +48,7 @@ impl HarnessAdapter for CodexCliAdapter {
     }
 
     async fn launch(&self, binding: &Binding, prompt: Option<&str>) -> Result<HarnessHandle> {
-        Self::write_mcp_config(binding)
-            .context("failed to write MCP config for Codex CLI")?;
+        Self::write_mcp_config(binding).context("failed to write MCP config for Codex CLI")?;
 
         let mut cmd = Command::new("codex");
 
@@ -86,7 +90,11 @@ impl HarnessAdapter for CodexCliAdapter {
                 libc::kill(id as i32, libc::SIGTERM);
             }
         }
-        handle.child.wait().await.context("waiting for codex to exit")?;
+        handle
+            .child
+            .wait()
+            .await
+            .context("waiting for codex to exit")?;
         Ok(())
     }
 }

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use tokio::process::Command;
 
-use super::{chitta_token, HarnessAdapter, HarnessHandle};
+use super::{HarnessAdapter, HarnessHandle, chitta_token};
 use crate::binding::Binding;
 
 pub struct OpencodeAdapter;
@@ -41,6 +41,10 @@ impl OpencodeAdapter {
                     "type": "remote",
                     "url": format!("{}/mcp", binding.smriti_url),
                 },
+                "sutra": {
+                    "type": "remote",
+                    "url": format!("{}/mcp", binding.sutra_url),
+                },
             }
         });
 
@@ -56,8 +60,8 @@ impl HarnessAdapter for OpencodeAdapter {
     }
 
     async fn launch(&self, binding: &Binding, prompt: Option<&str>) -> Result<HarnessHandle> {
-        let config_path = Self::write_mcp_config(binding)
-            .context("failed to write MCP config for opencode")?;
+        let config_path =
+            Self::write_mcp_config(binding).context("failed to write MCP config for opencode")?;
 
         let mut cmd = Command::new("opencode");
 
@@ -94,7 +98,11 @@ impl HarnessAdapter for OpencodeAdapter {
                 libc::kill(id as i32, libc::SIGTERM);
             }
         }
-        handle.child.wait().await.context("waiting for opencode to exit")?;
+        handle
+            .child
+            .wait()
+            .await
+            .context("waiting for opencode to exit")?;
         Ok(())
     }
 }

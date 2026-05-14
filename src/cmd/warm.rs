@@ -1,10 +1,10 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
+use crate::adapter::HarnessAdapter;
 use crate::adapter::claude_code::ClaudeCodeAdapter;
 use crate::adapter::codex::CodexCliAdapter;
 use crate::adapter::gemini::GeminiCliAdapter;
 use crate::adapter::opencode::OpencodeAdapter;
-use crate::adapter::HarnessAdapter;
 use crate::binding::Binding;
 use crate::config::ManasConfig;
 
@@ -29,6 +29,7 @@ pub async fn run(harness: &str) -> Result<()> {
     println!("  yojana:   {}", binding.yojana_url);
     println!("  sangha:   {}", binding.sangha_url);
     println!("  smriti:   {}", binding.smriti_url);
+    println!("  sutra:    {}", binding.sutra_url);
     println!("  project:  {}", binding.project_root.display());
     println!("  adapter:  {}", adapter.name());
     println!();

@@ -12,6 +12,7 @@ pub struct Binding {
     pub yojana_url: String,
     pub sangha_url: String,
     pub smriti_url: String,
+    pub sutra_url: String,
     pub project_root: PathBuf,
     pub transcript_path: Option<PathBuf>,
 }
@@ -25,6 +26,7 @@ impl Binding {
             yojana_url: config.yojana_url.clone(),
             sangha_url: config.sangha_url.clone(),
             smriti_url: config.smriti_url.clone(),
+            sutra_url: config.sutra_url.clone(),
             project_root,
             transcript_path: None,
         }
@@ -42,13 +44,11 @@ impl Binding {
             ("MANAS_YOJANA_URL".into(), self.yojana_url.clone()),
             ("MANAS_SANGHA_URL".into(), self.sangha_url.clone()),
             ("MANAS_SMRITI_URL".into(), self.smriti_url.clone()),
+            ("MANAS_SUTRA_URL".into(), self.sutra_url.clone()),
         ];
 
         if let Some(ref path) = self.transcript_path {
-            vars.push((
-                "MANAS_TRANSCRIPT_PATH".into(),
-                path.display().to_string(),
-            ));
+            vars.push(("MANAS_TRANSCRIPT_PATH".into(), path.display().to_string()));
         }
 
         vars

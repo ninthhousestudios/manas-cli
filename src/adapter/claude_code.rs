@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use tokio::process::Command;
 
-use super::{chitta_token, HarnessAdapter, HarnessHandle};
+use super::{HarnessAdapter, HarnessHandle, chitta_token};
 use crate::binding::Binding;
 
 pub struct ClaudeCodeAdapter;
@@ -51,6 +51,10 @@ impl ClaudeCodeAdapter {
                 "smriti": {
                     "type": "http",
                     "url": format!("{}/mcp", binding.smriti_url),
+                },
+                "sutra": {
+                    "type": "http",
+                    "url": format!("{}/mcp", binding.sutra_url),
                 },
             }
         });
@@ -112,7 +116,10 @@ impl HarnessAdapter for ClaudeCodeAdapter {
 
     fn transcript_path(&self, binding: &Binding) -> Option<PathBuf> {
         let home = std::env::var("HOME").ok()?;
-        let project_hash = format!("{:x}", md5_hash(binding.project_root.to_string_lossy().as_bytes()));
+        let project_hash = format!(
+            "{:x}",
+            md5_hash(binding.project_root.to_string_lossy().as_bytes())
+        );
         Some(
             PathBuf::from(home)
                 .join(".claude")
@@ -128,7 +135,11 @@ impl HarnessAdapter for ClaudeCodeAdapter {
                 libc::kill(id as i32, libc::SIGTERM);
             }
         }
-        handle.child.wait().await.context("waiting for claude to exit")?;
+        handle
+            .child
+            .wait()
+            .await
+            .context("waiting for claude to exit")?;
         Ok(())
     }
 }
