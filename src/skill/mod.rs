@@ -2,7 +2,7 @@ pub mod lock;
 
 use std::path::PathBuf;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 use crate::adapter::{HarnessAdapter, HarnessHandle};
 use crate::binding::Binding;
@@ -14,7 +14,7 @@ pub struct SkillDef {
     pub lock_scope: LockScope,
     pub lock_ttl_secs: u64,
     pub prompt: String,
-    pub output_paths: Vec<PathBuf>,                                                                                             
+    pub output_paths: Vec<PathBuf>,
 }
 
 #[derive(Debug)]
@@ -121,6 +121,8 @@ mod tests {
             chitta_url: "http://localhost:3100".into(),
             yojana_url: "http://localhost:4200".into(),
             sangha_url: "http://localhost:3200".into(),
+            smriti_url: "http://localhost:7333".into(),
+            sutra_url: "http://localhost:3201".into(),
             serve_port: 3000,
         };
         Binding::new(&config, PathBuf::from("/tmp/test-project"))
@@ -162,7 +164,11 @@ mod tests {
         let releases = mock.releases.lock().unwrap();
 
         assert_eq!(claims.len(), 1, "lock should have been claimed");
-        assert_eq!(releases.len(), 1, "lock should have been released despite error");
+        assert_eq!(
+            releases.len(),
+            1,
+            "lock should have been released despite error"
+        );
     }
 
     #[tokio::test]
@@ -178,7 +184,10 @@ mod tests {
 
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("held by session"), "error should mention conflict: {err}");
+        assert!(
+            err.contains("held by session"),
+            "error should mention conflict: {err}"
+        );
 
         // No release should happen since we never acquired
         let releases = mock.releases.lock().unwrap();

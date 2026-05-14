@@ -1,8 +1,11 @@
+use std::path::{Path, PathBuf};
+
 use anyhow::{Context, Result};
 
 pub async fn run(
     chitta_url: &str,
     yojana_url: &str,
+    sutra_url: &str,
     args: serde_json::Value,
 ) -> Result<String> {
     let project = args
@@ -12,27 +15,30 @@ pub async fn run(
     let profile = args
         .get("profile")
         .and_then(|v| v.as_str())
-        .unwrap_or("chitta");
+        .unwrap_or("josh");
     let max_tokens: usize = args
         .get("max_tokens")
         .and_then(|v| v.as_u64())
         .unwrap_or(1500) as usize;
+    let workspace_path = resolve_workspace_path(&args, project);
 
-    let (memories, tasks) = tokio::join!(
-        fetch_memories(chitta_url, project, profile),
+    let (profile_entries, tasks, sutra_status) = tokio::join!(
+        fetch_profile(chitta_url, profile),
         fetch_tasks(yojana_url, project),
+        fetch_sutra_status(sutra_url, workspace_path.as_deref()),
     );
 
     let mut sections = Vec::new();
-    let mut source_memories = 0;
+    let mut source_profile_entries = 0;
     let mut source_tasks = 0;
+    let mut source_sutra = 0;
 
-    if let Ok(mems) = memories {
-        if !mems.is_empty() {
-            source_memories = mems.len();
-            let mut lines = vec!["## memory context".to_string()];
-            for m in &mems {
-                lines.push(format!("- {}", m));
+    if let Ok(entries) = profile_entries {
+        if !entries.is_empty() {
+            source_profile_entries = entries.len();
+            let mut lines = vec!["## profile context".to_string()];
+            for entry in &entries {
+                lines.push(format!("- {}", entry));
             }
             sections.push(lines.join("\n"));
         }
@@ -47,6 +53,11 @@ pub async fn run(
             }
             sections.push(lines.join("\n"));
         }
+    }
+
+    if let Ok(Some(status)) = sutra_status {
+        source_sutra = 1;
+        sections.push(format!("## code index\n- {status}"));
     }
 
     if sections.is_empty() {
@@ -64,37 +75,110 @@ pub async fn run(
     }
 
     preamble.push_str(&format!(
-        "\n\n---\nsources: {} memories, {} tasks",
-        source_memories, source_tasks
+        "\n\n---\nsources: {} profile entries, {} tasks, {} code index",
+        source_profile_entries, source_tasks, source_sutra
     ));
 
     Ok(preamble)
 }
 
-async fn fetch_memories(chitta_url: &str, project: &str, profile: &str) -> Result<Vec<String>> {
+fn resolve_workspace_path(args: &serde_json::Value, project: &str) -> Option<String> {
+    for key in ["workspace_path", "path"] {
+        if let Some(path) = args
+            .get(key)
+            .and_then(|v| v.as_str())
+            .filter(|s| !s.is_empty())
+        {
+            return Some(normalize_path(path));
+        }
+    }
+
+    if looks_like_path(project) {
+        return Some(normalize_path(project));
+    }
+
+    let cwd = std::env::current_dir().ok()?;
+    if cwd
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name == project)
+        && is_probable_workspace(&cwd)
+    {
+        return Some(cwd.to_string_lossy().to_string());
+    }
+
+    if let Some(parent) = cwd.parent() {
+        let sibling = parent.join(project);
+        if sibling.is_dir() && is_probable_workspace(&sibling) {
+            return Some(sibling.to_string_lossy().to_string());
+        }
+    }
+
+    if is_probable_workspace(&cwd) {
+        return Some(cwd.to_string_lossy().to_string());
+    }
+
+    None
+}
+
+fn looks_like_path(value: &str) -> bool {
+    value.contains('/') || value.starts_with('.') || value.starts_with('~')
+}
+
+fn is_probable_workspace(path: &Path) -> bool {
+    [".git", "Cargo.toml", "pubspec.yaml", "package.json"]
+        .iter()
+        .any(|marker| path.join(marker).exists())
+}
+
+fn normalize_path(path: &str) -> String {
+    let expanded = if let Some(rest) = path.strip_prefix("~/") {
+        std::env::var("HOME")
+            .map(|home| PathBuf::from(home).join(rest))
+            .unwrap_or_else(|_| PathBuf::from(path))
+    } else {
+        PathBuf::from(path)
+    };
+
+    let absolute = if expanded.is_absolute() {
+        expanded
+    } else {
+        std::env::current_dir()
+            .map(|cwd| cwd.join(&expanded))
+            .unwrap_or(expanded)
+    };
+
+    absolute
+        .canonicalize()
+        .unwrap_or(absolute)
+        .to_string_lossy()
+        .to_string()
+}
+
+async fn fetch_profile(chitta_url: &str, profile: &str) -> Result<Vec<String>> {
     let client = reqwest::Client::new();
 
     let resp = mcp_call(
         &client,
         chitta_url,
-        "search_memories",
+        "get_profile",
         serde_json::json!({
-            "query": project,
             "profile": profile,
-            "k": 20,
-            "memory_types": ["decision", "observation", "mental_model"],
         }),
     )
     .await?;
 
     let content_text = extract_mcp_text(&resp)?;
-    let parsed: serde_json::Value = serde_json::from_str(&content_text)
-        .unwrap_or_else(|_| serde_json::json!([]));
+    let parsed: serde_json::Value =
+        serde_json::from_str(&content_text).unwrap_or_else(|_| serde_json::json!([]));
 
     let mut lines = Vec::new();
-    if let Some(arr) = parsed.as_array() {
+    if let Some(arr) = parsed.get("entries").and_then(|v| v.as_array()) {
         for mem in arr {
-            let mtype = mem.get("memory_type").and_then(|v| v.as_str()).unwrap_or("?");
+            let mtype = mem
+                .get("memory_type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("?");
             let content = mem.get("content").and_then(|v| v.as_str()).unwrap_or("");
             let date = mem.get("event_time").and_then(|v| v.as_str()).unwrap_or("");
             let short_date = date.get(..10).unwrap_or(date);
@@ -151,10 +235,76 @@ async fn fetch_tasks(yojana_url: &str, project: &str) -> Result<Vec<String>> {
     Ok(lines)
 }
 
+async fn fetch_sutra_status(
+    sutra_url: &str,
+    workspace_path: Option<&str>,
+) -> Result<Option<String>> {
+    let Some(path) = workspace_path else {
+        return Ok(None);
+    };
+    if !Path::new(path).is_dir() {
+        return Ok(Some(format!(
+            "skipped sutra_status: workspace path not found: {path}"
+        )));
+    }
+
+    let client = reqwest::Client::new();
+    let resp = mcp_call(
+        &client,
+        sutra_url,
+        "sutra_status",
+        serde_json::json!({
+            "path": path,
+        }),
+    )
+    .await?;
+
+    let content_text = extract_mcp_text(&resp)?;
+    Ok(Some(summarize_sutra_status(&content_text)))
+}
+
+fn summarize_sutra_status(content_text: &str) -> String {
+    let parsed: serde_json::Value = match serde_json::from_str(content_text) {
+        Ok(value) => value,
+        Err(_) => return truncate_line(content_text, 240),
+    };
+
+    let workspace = parsed
+        .get("workspace")
+        .and_then(|v| v.as_str())
+        .unwrap_or("?");
+    let status = parsed.get("status").and_then(|v| v.as_str()).unwrap_or("?");
+    let mode = parsed.get("mode").and_then(|v| v.as_str()).unwrap_or("?");
+    let root = parsed.get("root").and_then(|v| v.as_str()).unwrap_or("?");
+    let files = parsed.get("files").and_then(|v| v.as_u64()).unwrap_or(0);
+    let symbols = parsed.get("symbols").and_then(|v| v.as_u64()).unwrap_or(0);
+    let is_stale = parsed
+        .get("is_stale")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let last_parse = parsed
+        .get("last_parse")
+        .and_then(|v| v.as_str())
+        .unwrap_or("?");
+
+    format!(
+        "{workspace} [{status}, {mode}] stale={is_stale}; files={files}; symbols={symbols}; last_parse={last_parse}; root={root}"
+    )
+}
+
+fn truncate_line(text: &str, max_chars: usize) -> String {
+    let mut line = text.lines().next().unwrap_or("").to_string();
+    if line.len() > max_chars {
+        line.truncate(max_chars);
+        line.push_str("...");
+    }
+    line
+}
+
 fn parse_tasks(resp: &serde_json::Value) -> Vec<String> {
     let content_text = extract_mcp_text(resp).unwrap_or_default();
-    let parsed: serde_json::Value = serde_json::from_str(&content_text)
-        .unwrap_or_else(|_| serde_json::json!([]));
+    let parsed: serde_json::Value =
+        serde_json::from_str(&content_text).unwrap_or_else(|_| serde_json::json!([]));
 
     let mut lines = Vec::new();
     if let Some(arr) = parsed.as_array() {
@@ -162,7 +312,10 @@ fn parse_tasks(resp: &serde_json::Value) -> Vec<String> {
             let hid = task.get("human_id").and_then(|v| v.as_str()).unwrap_or("?");
             let status = task.get("status").and_then(|v| v.as_str()).unwrap_or("?");
             let title = task.get("title").and_then(|v| v.as_str()).unwrap_or("?");
-            let blocked = task.get("blocked").and_then(|v| v.as_bool()).unwrap_or(false);
+            let blocked = task
+                .get("blocked")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
             let marker = if blocked { " [BLOCKED]" } else { "" };
             lines.push(format!("{hid} [{status}]{marker} {title}"));
         }

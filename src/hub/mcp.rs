@@ -11,6 +11,7 @@ use super::wake_up;
 pub struct HubState {
     pub chitta_url: String,
     pub yojana_url: String,
+    pub sutra_url: String,
 }
 
 #[derive(Deserialize)]
@@ -63,12 +64,13 @@ impl JsonRpcResponse {
 static TOOL_DEFS: &[(&str, &str, &str)] = &[
     (
         "manas_wake_up",
-        "Session-start context injection. Fans out to chitta + yojana, returns a merged preamble.",
+        "Session-start context injection. Fans out to chitta + yojana + sutra, refreshes the code index, and returns a merged preamble.",
         r#"{
             "type": "object",
             "properties": {
                 "project": { "type": "string", "description": "Project name or slug" },
-                "profile": { "type": "string", "description": "Chitta profile (default: chitta)", "default": "chitta" },
+                "workspace_path": { "type": "string", "description": "Optional workspace root path for sutra_status. Relative paths are resolved from the manas serve cwd." },
+                "profile": { "type": "string", "description": "Chitta profile for get_profile (default: josh)", "default": "josh" },
                 "max_tokens": { "type": "integer", "description": "Token budget for the preamble (default: 1500)", "default": 1500 }
             },
             "required": ["project"]
@@ -175,10 +177,7 @@ async fn handle_tools_call(
     params: serde_json::Value,
     state: &HubState,
 ) -> JsonRpcResponse {
-    let tool_name = params
-        .get("name")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let tool_name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
     let arguments = params
         .get("arguments")
         .cloned()
@@ -186,7 +185,14 @@ async fn handle_tools_call(
 
     match tool_name {
         "manas_wake_up" => {
-            match wake_up::run(&state.chitta_url, &state.yojana_url, arguments).await {
+            match wake_up::run(
+                &state.chitta_url,
+                &state.yojana_url,
+                &state.sutra_url,
+                arguments,
+            )
+            .await
+            {
                 Ok(result) => JsonRpcResponse::success(
                     id,
                     serde_json::json!({
@@ -202,23 +208,21 @@ async fn handle_tools_call(
                 ),
             }
         }
-        "manas_ingest" => {
-            match ingest(state, arguments).await {
-                Ok(result) => JsonRpcResponse::success(
-                    id,
-                    serde_json::json!({
-                        "content": [{ "type": "text", "text": result }]
-                    }),
-                ),
-                Err(e) => JsonRpcResponse::success(
-                    id,
-                    serde_json::json!({
-                        "content": [{ "type": "text", "text": format!("error: {e}") }],
-                        "isError": true
-                    }),
-                ),
-            }
-        }
+        "manas_ingest" => match ingest(state, arguments).await {
+            Ok(result) => JsonRpcResponse::success(
+                id,
+                serde_json::json!({
+                    "content": [{ "type": "text", "text": result }]
+                }),
+            ),
+            Err(e) => JsonRpcResponse::success(
+                id,
+                serde_json::json!({
+                    "content": [{ "type": "text", "text": format!("error: {e}") }],
+                    "isError": true
+                }),
+            ),
+        },
         _ => JsonRpcResponse::error(id, -32602, format!("unknown tool: {tool_name}")),
     }
 }
@@ -226,7 +230,10 @@ async fn handle_tools_call(
 async fn ingest(state: &HubState, args: serde_json::Value) -> anyhow::Result<String> {
     let text = args.get("text").and_then(|v| v.as_str()).unwrap_or("");
     let project = args.get("project").and_then(|v| v.as_str()).unwrap_or("");
-    let profile = args.get("profile").and_then(|v| v.as_str()).unwrap_or("chitta");
+    let profile = args
+        .get("profile")
+        .and_then(|v| v.as_str())
+        .unwrap_or("chitta");
     let source = args.get("source").and_then(|v| v.as_str()).unwrap_or("mcp");
 
     let client = reqwest::Client::new();
@@ -266,17 +273,14 @@ fn wrap(resp: JsonRpcResponse, sse: bool, session_id: &str) -> axum::response::R
         )
             .into_response()
     } else {
-        (
-            StatusCode::OK,
-            [("content-type", "application/json")],
-            json,
-        )
-            .into_response()
+        (StatusCode::OK, [("content-type", "application/json")], json).into_response()
     };
 
     response.headers_mut().insert(
         "mcp-session-id",
-        session_id.parse().unwrap_or_else(|_| "manas-hub".parse().unwrap()),
+        session_id
+            .parse()
+            .unwrap_or_else(|_| "manas-hub".parse().unwrap()),
     );
     response
 }
