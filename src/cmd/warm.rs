@@ -24,10 +24,8 @@ pub async fn run(harness: &str) -> Result<()> {
 
     println!("manas warm — booting rich session");
     println!("  session:  {}", binding.session_id);
-    println!("  manas:    {}", binding.manas_url);
     println!("  chitta:   {}", binding.chitta_url);
     println!("  yojana:   {}", binding.yojana_url);
-    println!("  sangha:   {}", binding.sangha_url);
     println!("  smriti:   {}", binding.smriti_url);
     println!("  sutra:    {}", binding.sutra_url);
     println!("  project:  {}", binding.project_root.display());

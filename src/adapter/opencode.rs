@@ -24,18 +24,10 @@ impl OpencodeAdapter {
 
         let config = serde_json::json!({
             "mcp": {
-                "manas": {
-                    "type": "remote",
-                    "url": format!("{}/mcp", binding.manas_url),
-                },
                 "chitta": chitta_entry,
                 "yojana": {
                     "type": "remote",
                     "url": format!("{}/mcp", binding.yojana_url),
-                },
-                "sangha": {
-                    "type": "remote",
-                    "url": format!("{}/mcp", binding.sangha_url),
                 },
                 "smriti": {
                     "type": "remote",

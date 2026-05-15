@@ -1,6 +1,18 @@
-## First Step — Manas Wake-Up
+## Sutra MCP
 
-**At the start of every conversation, do this first:** call `manas_wake_up` with `project` set to the current project slug/name and `workspace_path` set to `$CWD` when available. This loads Josh's Chitta profile, current Yojana context, and refreshes/registers the Sutra code index before any other exploration.
+Call `sutra_status` to make sure the workspace is fresh. Use `sutra_add_root` only when you need to force a reparse.
+
+Use sutra tools instead of built-in file tools for code exploration:
+
+| Instead of | Use |
+|---|---|
+| Glob / find | `sutra_map` |
+| Grep / rg | `sutra_grep` or `sutra_find` |
+| Read (code) | `sutra_read` |
+
+Before editing a load-bearing file, call `sutra_impact` first.
+Use `Glob`/`Grep`/`Read` only for non-code content.
+If a built-in code tool is denied by the guard, use the sutra equivalent.
 
 ## Yojana — Issue Tracker
 
@@ -46,21 +58,6 @@ If a project still has a legacy `docs/handoff.md`, archive prior content to `.ha
 
 For a hand-curated "next up" lane across projects, tag tasks with `now` and query with `yojana_query tag="now"`.
 
-## Sutra MCP
-
-`manas_wake_up` calls `sutra_status` for the workspace at session start. Call `sutra_status` directly later if the workspace changes or you need a fresh status check. Use `sutra_add_root` only when you need to force a reparse.
-
-Use sutra tools instead of built-in file tools for code exploration:
-
-| Instead of | Use |
-|---|---|
-| Glob / find | `sutra_map` |
-| Grep / rg | `sutra_grep` or `sutra_find` |
-| Read (code) | `sutra_read` |
-
-Before editing a load-bearing file, call `sutra_impact` first.
-Use `Glob`/`Grep`/`Read` only for non-code content.
-If a built-in code tool is denied by the guard, use the sutra equivalent.
 
 ## Smriti MCP
 
@@ -76,21 +73,18 @@ For non-code file searches (documents, configs, data files), prefer smriti over 
 
 If smriti returns "database disk image is malformed", the FTS/vec virtual tables may be corrupted. Fall back to shell commands and file a smriti bug.
 
-## Sangha — Session Coordination
-
-After `manas_wake_up`, if sangha tools are available, call `mcp__sangha__session_register` with `project` set to `$CWD` and `branch` from git.
 
 ## Chitta — Working Model of Josh
 
-Chitta is the working model of Josh — what he values, how he works, what he prefers, what mental models he uses. Not a general memory store.
+Chitta is the working model of Josh — what he values, how he works, what he prefers, what mental models he uses. Not a general memory store. `get_profile` loads this information. Only do so if told directly.
 
 - Service: `systemctl --user {start|stop|status} chitta`
 - Binary: `~/.cargo/bin/chitta` (built from `~/soft/manas/chitta`)
 - DB: `postgresql://localhost/chitta`
 - MCP endpoint: `http://127.0.0.1:3100/mcp`
-- Tools: `mcp__chitta__health_check`, `store_memory`, `get_memory`, `search_memories`, `update_memory`, `delete_memory`, `list_recent_memories`
+- Tools: `mcp__chitta__health_check`, `get_profile`, `store_memory`, `get_memory`, `search_memories`, `update_memory`, `delete_memory`, `list_recent_memories`
 
-`manas_wake_up` calls `get_profile` at session start to load the always-on profile (top ~30 working-model entries by effective score). If Chitta appears unavailable, call `mcp__chitta__health_check`; if it fails, **immediately tell Josh**. If Josh gives a Chitta memory id, use `get_memory`; prefixes work. For context-specific retrieval, use `search_memories` with `applies_to` facets (domains, skills, projects, situations).
+If Chitta appears unavailable, call `mcp__chitta__health_check`; if it fails, **immediately tell Josh**. If Josh gives a Chitta memory id, use `get_memory`; prefixes work. For context-specific retrieval, use `search_memories` with `applies_to` facets (domains, skills, projects, situations).
 
 ### What goes in Chitta
 

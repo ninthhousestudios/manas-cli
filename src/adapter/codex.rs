@@ -21,17 +21,13 @@ impl CodexCliAdapter {
         let config_path = codex_home.join("config.toml");
 
         let toml = format!(
-            "[mcp_servers.manas]\nurl = \"{}/mcp\"\n\n\
-             [mcp_servers.chitta]\nurl = \"{}/mcp\"\n\
+            "[mcp_servers.chitta]\nurl = \"{}/mcp\"\n\
              bearer_token_env_var = \"CHITTA_TOKEN\"\n\n\
              [mcp_servers.yojana]\nurl = \"{}/mcp\"\n\n\
-             [mcp_servers.sangha]\nurl = \"{}/mcp\"\n\n\
              [mcp_servers.smriti]\nurl = \"{}/mcp\"\n\n\
              [mcp_servers.sutra]\nurl = \"{}/mcp\"\n",
-            binding.manas_url,
             binding.chitta_url,
             binding.yojana_url,
-            binding.sangha_url,
             binding.smriti_url,
             binding.sutra_url,
         );

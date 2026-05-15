@@ -35,18 +35,10 @@ impl ClaudeCodeAdapter {
 
         let config = serde_json::json!({
             "mcpServers": {
-                "manas": {
-                    "type": "http",
-                    "url": format!("{}/mcp", binding.manas_url),
-                },
                 "chitta": chitta_entry,
                 "yojana": {
                     "type": "http",
                     "url": format!("{}/mcp", binding.yojana_url),
-                },
-                "sangha": {
-                    "type": "http",
-                    "url": format!("{}/mcp", binding.sangha_url),
                 },
                 "smriti": {
                     "type": "http",
