@@ -11,7 +11,6 @@ use super::wake_up;
 pub struct HubState {
     pub chitta_url: String,
     pub yojana_url: String,
-    pub sutra_url: String,
 }
 
 #[derive(Deserialize)]
@@ -64,12 +63,11 @@ impl JsonRpcResponse {
 static TOOL_DEFS: &[(&str, &str, &str)] = &[
     (
         "manas_wake_up",
-        "Session-start context injection. Fans out to chitta + yojana + sutra, refreshes the code index, and returns a merged preamble.",
+        "Session-start context injection. Fans out to chitta + yojana and returns a merged preamble.",
         r#"{
             "type": "object",
             "properties": {
                 "project": { "type": "string", "description": "Project name or slug" },
-                "workspace_path": { "type": "string", "description": "Optional workspace root path for sutra_status. Relative paths are resolved from the manas serve cwd." },
                 "profile": { "type": "string", "description": "Chitta profile for get_profile (default: josh)", "default": "josh" },
                 "max_tokens": { "type": "integer", "description": "Token budget for the preamble (default: 1500)", "default": 1500 }
             },
@@ -188,7 +186,6 @@ async fn handle_tools_call(
             match wake_up::run(
                 &state.chitta_url,
                 &state.yojana_url,
-                &state.sutra_url,
                 arguments,
             )
             .await

@@ -122,7 +122,6 @@ mod tests {
             yojana_url: "http://localhost:4200".into(),
             sangha_url: "http://localhost:3200".into(),
             smriti_url: "http://localhost:7333".into(),
-            sutra_url: "http://localhost:3201".into(),
             serve_port: 3000,
         };
         Binding::new(&config, PathBuf::from("/tmp/test-project"))

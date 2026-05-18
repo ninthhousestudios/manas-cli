@@ -35,10 +35,6 @@ impl GeminiCliAdapter {
                     "type": "http",
                     "url": format!("{}/mcp", binding.smriti_url),
                 },
-                "sutra": {
-                    "type": "http",
-                    "url": format!("{}/mcp", binding.sutra_url),
-                },
             }
         });
 

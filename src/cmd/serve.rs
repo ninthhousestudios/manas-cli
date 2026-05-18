@@ -14,12 +14,10 @@ pub async fn run(port: u16) -> Result<()> {
     eprintln!("manas serve listening on 0.0.0.0:{port}");
     eprintln!("  chitta: {}", config.chitta_url);
     eprintln!("  yojana: {}", config.yojana_url);
-    eprintln!("  sutra:  {}", config.sutra_url);
 
     let state = Arc::new(HubState {
         chitta_url: config.chitta_url,
         yojana_url: config.yojana_url,
-        sutra_url: config.sutra_url,
     });
 
     let app = Router::new()

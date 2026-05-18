@@ -27,7 +27,6 @@ pub async fn run(harness: &str) -> Result<()> {
     println!("  chitta:   {}", binding.chitta_url);
     println!("  yojana:   {}", binding.yojana_url);
     println!("  smriti:   {}", binding.smriti_url);
-    println!("  sutra:    {}", binding.sutra_url);
     println!("  project:  {}", binding.project_root.display());
     println!("  adapter:  {}", adapter.name());
     println!();
