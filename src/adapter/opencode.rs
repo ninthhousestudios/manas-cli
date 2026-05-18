@@ -33,6 +33,10 @@ impl OpencodeAdapter {
                     "type": "remote",
                     "url": format!("{}/mcp", binding.smriti_url),
                 },
+                "sutra": {
+                    "type": "local",
+                    "command": ["sutra", "serve", "--stdio"],
+                },
             }
         });
 

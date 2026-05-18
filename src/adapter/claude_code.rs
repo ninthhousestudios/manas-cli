@@ -44,6 +44,10 @@ impl ClaudeCodeAdapter {
                     "type": "http",
                     "url": format!("{}/mcp", binding.smriti_url),
                 },
+                "sutra": {
+                    "command": "sutra",
+                    "args": ["serve", "--stdio"],
+                },
             }
         });
 

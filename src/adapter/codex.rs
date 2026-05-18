@@ -24,7 +24,8 @@ impl CodexCliAdapter {
             "[mcp_servers.chitta]\nurl = \"{}/mcp\"\n\
              bearer_token_env_var = \"CHITTA_TOKEN\"\n\n\
              [mcp_servers.yojana]\nurl = \"{}/mcp\"\n\n\
-             [mcp_servers.smriti]\nurl = \"{}/mcp\"\n",
+             [mcp_servers.smriti]\nurl = \"{}/mcp\"\n\n\
+             [mcp_servers.sutra]\ncommand = \"sutra\"\nargs = [\"serve\", \"--stdio\"]\n",
             binding.chitta_url,
             binding.yojana_url,
             binding.smriti_url,
