@@ -1,6 +1,6 @@
 [package]
 name = "manas-cli"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2024"
 description = "Ops CLI for the manas ecosystem"
 license = "AGPL-3.0"
