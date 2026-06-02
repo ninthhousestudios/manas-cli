@@ -18,10 +18,20 @@ pub async fn run(
         .get("max_tokens")
         .and_then(|v| v.as_u64())
         .unwrap_or(1500) as usize;
-    let (profile_entries, tasks) = tokio::join!(
-        fetch_profile(chitta_url, profile),
-        fetch_tasks(yojana_url, project),
-    );
+    let include_profile = args
+        .get("include_profile")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    let profile_future = async {
+        if include_profile {
+            fetch_profile(chitta_url, profile).await
+        } else {
+            Ok(Vec::new())
+        }
+    };
+
+    let (profile_entries, tasks) = tokio::join!(profile_future, fetch_tasks(yojana_url, project));
 
     let mut sections = Vec::new();
     let mut source_profile_entries = 0;

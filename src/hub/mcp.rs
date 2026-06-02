@@ -69,6 +69,7 @@ static TOOL_DEFS: &[(&str, &str, &str)] = &[
             "properties": {
                 "project": { "type": "string", "description": "Project name or slug" },
                 "profile": { "type": "string", "description": "Chitta profile for get_profile (default: josh)", "default": "josh" },
+                "include_profile": { "type": "boolean", "description": "Fetch chitta profile (default: false)", "default": false },
                 "max_tokens": { "type": "integer", "description": "Token budget for the preamble (default: 1500)", "default": 1500 }
             },
             "required": ["project"]
