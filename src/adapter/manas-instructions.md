@@ -18,6 +18,7 @@ For non-code files (docs, configs, data), prefer smriti over shell:
 Local MCP issue tracker (tasks, state machines, edges, context shapes). systemd user service.
 - Service: `systemctl --user {start|stop|status} yojana` | Binary: `~/.cargo/bin/yojana` | DB: `~/.yojana/yojana.db` | Endpoint: `http://127.0.0.1:4200/mcp`
 - Tools: yojana_project, yojana_task, yojana_edge, yojana_query, yojana_ready, yojana_context
+- Yojana has subprojects. e.g., sutra/needs-designing is a subproject of sutra; adityas/site is a subproject of adityas.
 
 <triage_discipline>
 When tasks come from an explicit triage process (review, decompose, planning), set status accurately on creation. `needs-triage` means *untriaged*, not *just created*. Status by slice_type:

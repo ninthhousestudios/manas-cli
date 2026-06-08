@@ -83,7 +83,6 @@ impl HarnessAdapter for ClaudeCodeAdapter {
 
         cmd.arg("--mcp-config")
             .arg(&mcp_config)
-            .arg("--strict-mcp-config")
             .arg("--append-system-prompt-file")
             .arg(&instructions);
 
