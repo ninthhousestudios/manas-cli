@@ -1,10 +1,10 @@
 use anyhow::{Result, bail};
 
-use crate::adapter::{self, HarnessAdapter};
 use crate::adapter::claude_code::ClaudeCodeAdapter;
 use crate::adapter::codex::CodexCliAdapter;
 use crate::adapter::gemini::GeminiCliAdapter;
 use crate::adapter::opencode::OpencodeAdapter;
+use crate::adapter::{self, HarnessAdapter};
 use crate::binding::Binding;
 use crate::config::ManasConfig;
 

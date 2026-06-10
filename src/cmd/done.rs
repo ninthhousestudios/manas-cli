@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
-use crate::adapter::claude_code::ClaudeCodeAdapter;
 use crate::adapter::HarnessAdapter;
+use crate::adapter::claude_code::ClaudeCodeAdapter;
 use crate::binding::Binding;
 use crate::config::ManasConfig;
 use crate::skill::lock::{LockScope, SanghaLockClient};
@@ -20,7 +20,8 @@ pub async fn run() -> Result<()> {
     let transcript_path = resolve_transcript_path(&binding);
     binding.transcript_path = transcript_path;
 
-    let lock_client = SanghaLockClient::new(&config.sangha_url, &project_root.display().to_string());
+    let lock_client =
+        SanghaLockClient::new(&config.sangha_url, &project_root.display().to_string());
     let shell = SkillShell::new(lock_client);
 
     let skill = SkillDef {
@@ -56,7 +57,10 @@ fn resolve_transcript_path(binding: &Binding) -> Option<PathBuf> {
 
     // 2. Auto-detect via adapter (most recent transcript for this project)
     let adapter = ClaudeCodeAdapter;
-    if let Some(dir) = adapter.transcript_path(binding).and_then(|p| p.parent().map(|d| d.to_path_buf())) {
+    if let Some(dir) = adapter
+        .transcript_path(binding)
+        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+    {
         if dir.exists() {
             if let Ok(mut entries) = std::fs::read_dir(&dir) {
                 let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;

@@ -77,4 +77,3 @@ fn binding_env_vars_include_service_urls() {
         "expected yojana URL in output: {stdout}"
     );
 }
-

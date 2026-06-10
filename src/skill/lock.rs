@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use tokio::sync::Mutex;
 
 #[async_trait::async_trait]
@@ -299,7 +299,12 @@ pub mod mock {
             Ok(())
         }
 
-        async fn heartbeat(&self, _resource: &str, _session_id: &str, _ttl_secs: u64) -> Result<()> {
+        async fn heartbeat(
+            &self,
+            _resource: &str,
+            _session_id: &str,
+            _ttl_secs: u64,
+        ) -> Result<()> {
             Ok(())
         }
     }

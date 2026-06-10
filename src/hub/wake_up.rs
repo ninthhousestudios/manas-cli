@@ -1,11 +1,6 @@
-
 use anyhow::{Context, Result};
 
-pub async fn run(
-    chitta_url: &str,
-    yojana_url: &str,
-    args: serde_json::Value,
-) -> Result<String> {
+pub async fn run(chitta_url: &str, yojana_url: &str, args: serde_json::Value) -> Result<String> {
     let project = args
         .get("project")
         .and_then(|v| v.as_str())

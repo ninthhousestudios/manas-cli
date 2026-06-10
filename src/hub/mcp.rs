@@ -184,13 +184,7 @@ async fn handle_tools_call(
 
     match tool_name {
         "manas_wake_up" => {
-            match wake_up::run(
-                &state.chitta_url,
-                &state.yojana_url,
-                arguments,
-            )
-            .await
-            {
+            match wake_up::run(&state.chitta_url, &state.yojana_url, arguments).await {
                 Ok(result) => JsonRpcResponse::success(
                     id,
                     serde_json::json!({

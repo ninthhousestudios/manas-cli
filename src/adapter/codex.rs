@@ -26,9 +26,7 @@ impl CodexCliAdapter {
              [mcp_servers.yojana]\nurl = \"{}/mcp\"\n\n\
              [mcp_servers.smriti]\nurl = \"{}/mcp\"\n\n\
              [mcp_servers.sutra]\ncommand = \"sutra\"\nargs = [\"serve\", \"--stdio\"]\n",
-            binding.chitta_url,
-            binding.yojana_url,
-            binding.smriti_url,
+            binding.chitta_url, binding.yojana_url, binding.smriti_url,
         );
 
         std::fs::write(&config_path, &toml)?;
