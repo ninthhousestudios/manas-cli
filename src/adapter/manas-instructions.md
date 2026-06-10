@@ -4,6 +4,7 @@ Use sutra tools instead of built-in file tools for code:
 - Grep/rg → `sutra_grep` or `sutra_find`
 - Read (code) → `sutra_read`
 Run `sutra_status` first to verify workspace freshness; `sutra_add_root` only to force a reparse. Call `sutra_impact` before editing a load-bearing file. Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
+Projects can define human-readable aliases for components, files, and symbols in `.sutra/aliases.toml`. Use `sutra_resolve` to look up domain terms (e.g. "being detail cards") → code locations. Check for an aliases file before doing broad searches for a domain concept.
 </sutra_mcp>
 
 <smriti_mcp>
