@@ -31,6 +31,15 @@ When tasks come from an explicit triage process (review, decompose, planning), s
 Full enum and transitions: `~/soft/manas/yojana/README.md` § "Status model."
 </triage_discipline>
 
+<capture_discipline>
+Close-out fields are mined by vidhi-reflect for cross-project lessons — write them for a future reader with no transcript.
+- Closing a `bug`: root_cause is REQUIRED — the mechanism (why it broke), 1-3 sentences, not a restatement of the fix. Genuinely unknown → write "unknown:" plus what was ruled out. The fix itself goes in execution_record.
+- Closing any task where execution diverged from plan: record the divergence in execution_record — failed approaches, surprises, workarounds. Uneventful execution needs no record; "went as planned" entries dilute mining.
+- `wontfix` requires a closing comment saying why — rejected approaches are negative knowledge worth as much as fixes.
+- Set category at creation (bug/enhancement/experiment). A bug found and fixed mid-review is still category=bug.
+- decisions entries carry rationale and the strongest rejected alternative.
+</capture_discipline>
+
 <project_handoffs>
 Handoffs live in the yojana project's `handoff` field, NOT `docs/handoff.md`. Update via `yojana_project action=update slug=<project> handoff="..."`. Content: where the project IS (state, in-progress streams, recent landings) plus next-up pointers by `slug/N`. Keep tight — readers fetch via `yojana_project action=get`. Cross-project queues belong in tracking, not one project's handoff. If a legacy `docs/handoff.md` exists, archive its content to `.handoffs/{datetime}.md` (git-tracked, project root) and replace it with a one-screen pointer to the yojana queries.
 </project_handoffs>
