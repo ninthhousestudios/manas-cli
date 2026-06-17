@@ -83,9 +83,5 @@ Don't store: routine code changes, things already in docs/code, trivial exchange
 </artifact_routing>
 
 <engineering_lessons>
-Distilled by vidhi-reflect from cross-project bug history; provenance in ~/soft/manas/docs/lessons/ledger.md. Hard budget ~10 entries — adding one over budget evicts one to a playbook.
-- SQLite: every multi-statement mutation in a transaction; one durable writer per DB file (a per-process mutex serializes nothing for other processes); long-lived reader connections go stale on FTS5 after writer automerge — treat 'database disk image is malformed' on MATCH as "reopen and retry", not corruption. Full playbook: ~/soft/manas/docs/lessons/sqlite-write-discipline.md
-- Any in-memory state gating correctness (index completeness, loaded engines, daemon liveness) needs a durable counterpart with a generation/identity check: restarts lose it, surviving Arc clones outlive it, PID-alive ≠ socket-connectable. (sutra/21, sutra/140, sutra/v1/30, panda/2, vidya/39)
-- When an extraction or refresh path yields None/empty, distinguish "nothing there" from "failed to look": no unwrap_or_default on fallible refreshes, no treating an unexpected node shape as absence. Silent empties corrupted downstream analysis in three codebases. (sutra/38, sutra/119, sutra/126, sutra/67, vidya/39)
-- Building or debugging an MCP server: read ~/soft/manas/docs/lessons/mcp-server-discipline.md first (keep-alive default, 401 bodies, schema typing, shutdown ordering).
+Code-anchored lessons are stored in sutra's lessons store (~/.sutra/lessons.db) and surfaced contextually by sutra_read, sutra_impact, and sutra_orient. When you learn something a future editor needs to know, call sutra_remember with the lesson text and location anchors. When closing a task that validates a lesson, cite it: sutra_remember(cite="<lesson_id>", source_tasks=["<task_id>"]). Provenance and routing history: ~/soft/manas/docs/lessons/ledger.md.
 </engineering_lessons>
