@@ -8,13 +8,10 @@ When exploring an unfamiliar area of the codebase, start with `sutra_explore(que
 Projects can define human-readable aliases for components, files, and symbols in `.sutra/aliases.toml`. Use `sutra_resolve` to look up domain terms (e.g. "being detail cards") → code locations. Check for an aliases file before doing broad searches for a domain concept.
 </sutra_mcp>
 
-<smriti_mcp>
+<smriti_cli>
 For non-code files (docs, configs, data), prefer smriti over shell:
-- find/ls → `smriti_find` with `path` (glob) or `ext`
-- grep (content) → `smriti_find` with `query`
-- cat/head → `smriti_read`
-`smriti_find(path="**/sync.sh")` locates files by name across indexed roots — faster than shell `find`. If it returns "database disk image is malformed" the FTS/vec tables are likely corrupt: fall back to shell and file a smriti bug.
-</smriti_mcp>
+- find/ → `smriti find --path (glob)` - much faster than `find`
+</smriti_cli>
 
 <yojana_issue_tracker>
 Local MCP issue tracker (tasks, state machines, edges, context shapes). systemd user service.
