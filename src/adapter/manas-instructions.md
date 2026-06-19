@@ -6,6 +6,15 @@ Use sutra tools instead of built-in file tools for code:
 Run `sutra_status` first to verify workspace freshness; `sutra_add_root` only to force a reparse. Call `sutra_impact` before editing a load-bearing file. Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
 When exploring an unfamiliar area of the codebase, start with `sutra_explore(query, workspace)` — one call replaces iterative map/outline/grep cycles. It returns a ranked symbol list with literal `sutra_read` fetch instructions and a strategy hint (read_top_n, read_all, narrow_query, explore_component). Use the strategy to decide your next action rather than reasoning about navigation yourself. For qualified symbol names (containing `::`), it falls through to exact lookup automatically.
 Projects can define human-readable aliases for components, files, and symbols in `.sutra/aliases.toml`. Use `sutra_resolve` to look up domain terms (e.g. "being detail cards") → code locations. Check for an aliases file before doing broad searches for a domain concept.
+
+sutra_read discipline: always discover the symbol name before reading. Use `sutra_explore` or `sutra_grep` first — don't guess names. Guessed names fail often (e.g. `Db::save_snapshot` when it's actually `Db::insert_snapshot`). Explore-then-read is one extra call; guess-and-miss is two calls plus a red error.
+
+Lessons system: sutra maintains a cross-project lessons store (~/.sutra/lessons.db) for code-anchored knowledge that future editors need.
+- **Store**: `sutra_remember(text, anchors)` — anchors are symbol names or file paths where the lesson applies. Sutra auto-enriches with import patterns and category tags.
+- **Surface**: lessons appear inline in `sutra_read`, `sutra_impact`, and `sutra_orient` when anchors match. `sutra_lessons` does explicit search.
+- **Cite**: when closing a task that validates a lesson, call `sutra_remember(cite="<lesson_id>", source_tasks=["<task_id>"])`. Citations build confidence; uncited lessons decay and are eventually archived.
+- **Scope**: lessons attach to technologies and patterns, not projects. A lesson learned in one workspace surfaces wherever its anchors match.
+When you learn something a future editor of this code needs to know — a hidden constraint, a non-obvious invariant, a failure mode — store it with `sutra_remember`. Don't store routine facts already visible in the code.
 </sutra_mcp>
 
 <smriti_cli>
@@ -80,5 +89,5 @@ Don't store: routine code changes, things already in docs/code, trivial exchange
 </artifact_routing>
 
 <engineering_lessons>
-Code-anchored lessons are stored in sutra's lessons store (~/.sutra/lessons.db) and surfaced contextually by sutra_read, sutra_impact, and sutra_orient. When you learn something a future editor needs to know, call sutra_remember with the lesson text and location anchors. When closing a task that validates a lesson, cite it: sutra_remember(cite="<lesson_id>", source_tasks=["<task_id>"]).
+See the lessons system section in `<sutra_mcp>` above. Short version: `sutra_remember` to store, `sutra_remember(cite=...)` to cite on task close-out.
 </engineering_lessons>
