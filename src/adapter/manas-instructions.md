@@ -17,6 +17,22 @@ Lessons system: sutra maintains a cross-project lessons store (~/.sutra/lessons.
 When you learn something a future editor of this code needs to know — a hidden constraint, a non-obvious invariant, a failure mode — store it with `sutra_remember`. Don't store routine facts already visible in the code.
 </sutra_mcp>
 
+<coding_discipline>
+Global language guardrails to enforce zero-cost abstractions, idiomatic memory management, and clean architecture. Agents must prioritize structural design over localized "quick fixes" that appease the compiler at the cost of performance.
+<rust>
+No Clone-Driven Development: Do not use `.clone()` or `.to_owned()` simply to bypass borrow checker errors. If data flow requires sharing, design proper reference structures (`&`, `&mut`) and explicit lifetimes (`'a`).
+Prefer Slices Over Containers Function arguments that only read data MUST accept slices (`&str`, `&[T]`) rather than owned collections (`String`, `Vec<T>`). Never force the caller to allocate on the heap just to pass an argument.
+Avoid Premature Dynamic Allocation Do not wrap traits in `Box<dyn Trait>` or multi-threaded wrappers (`Arc<Mutex<T>>`) solely because you cannot resolve generic constraints or lifetime bounds. Default to static dispatch (`impl Trait` or generics) unless a heterogeneous collection or true runtime dynamic dispatch is required.
+Graph & Tree Semantics When traversing graphs, trees, or stacks (e.g., in compilers or trackers), track lightweight identifiers (`i64`, internal indices) through recursive scopes rather than dragging heap-allocated strings or cloning state structures through loops.
+</rust>
+
+<dart/flutter>
+Strict Typing (No Dynamic): Avoid using `dynamic` or implicit `Object` types to escape strict typing. Use generics (`<T>`) or explicit interface abstractions.
+Enforce Const Constructors: Always maximize the use of `const` variables and constructors. In UI compilation paths or structural collections, omitting `const` causes unnecessary heap allocations and breaks rendering optimizations.
+Defensive Null Safety: Do not spam the exclamation mark null-assertion operator (`!`) to clear type errors. Use proper null-coalescing (`??`), conditional access (`?.`), or explicit `if (variable != null)` blocks to establish safe execution tracks.
+Cascade & Collection Operators: Use cascade operators (`..`) and collection-if/collection-for operators instead of writing imperative boilerplate to instantiate and mutate maps or lists.
+</dart/flutter>
+</coding_discipline>
 <smriti_cli>
 For non-code files (docs, configs, data), prefer smriti over shell:
 - find/ → `smriti find --path (glob)` - much faster than `find`
@@ -91,3 +107,4 @@ Don't store: routine code changes, things already in docs/code, trivial exchange
 <engineering_lessons>
 See the lessons system section in `<sutra_mcp>` above. Short version: `sutra_remember` to store, `sutra_remember(cite=...)` to cite on task close-out.
 </engineering_lessons>
+
