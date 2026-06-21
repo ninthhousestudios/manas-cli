@@ -7,6 +7,12 @@ Run `sutra_status` first to verify workspace freshness; `sutra_add_root` only to
 When exploring an unfamiliar area of the codebase, start with `sutra_explore(query, workspace)` — one call replaces iterative map/outline/grep cycles. It returns a ranked symbol list with literal `sutra_read` fetch instructions and a strategy hint (read_top_n, read_all, narrow_query, explore_component). Use the strategy to decide your next action rather than reasoning about navigation yourself. For qualified symbol names (containing `::`), it falls through to exact lookup automatically.
 Projects can define human-readable aliases for components, files, and symbols in `.sutra/aliases.toml`. Use `sutra_resolve` to look up domain terms (e.g. "being detail cards") → code locations. Check for an aliases file before doing broad searches for a domain concept.
 
+Exploration protocol (applies to all agents including subagents):
+1. Domain term or component name? → `sutra_resolve` first (aliases map human names to symbols/files).
+2. Concept, behavior, or "where is X?" → `sutra_explore` first. One call beats grep+read loops.
+3. Fall back to `sutra_grep`/`sutra_map` only when explore returns nothing or the query is a literal string pattern.
+Do NOT skip to built-in grep/Read for code exploration. sutra_explore is faster than iterative grep+read and returns ranked results with fetch instructions.
+
 sutra_read discipline: always discover the symbol name before reading. Use `sutra_explore` or `sutra_grep` first — don't guess names. Guessed names fail often (e.g. `Db::save_snapshot` when it's actually `Db::insert_snapshot`). Explore-then-read is one extra call; guess-and-miss is two calls plus a red error.
 
 Lessons system: sutra maintains a cross-project lessons store (~/.sutra/lessons.db) for code-anchored knowledge that future editors need.
