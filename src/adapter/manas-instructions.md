@@ -15,8 +15,6 @@ Do NOT skip to built-in grep/Read for code exploration. sutra_explore is faster 
 
 sutra_read discipline: always discover the symbol name before reading. Use `sutra_explore` or `sutra_grep` first — don't guess names. Guessed names fail often (e.g. `Db::save_snapshot` when it's actually `Db::insert_snapshot`). Explore-then-read is one extra call; guess-and-miss is two calls plus a red error.
 
-Mechanical lint/format sweeps: don't grind through `Edit`. The modification guard hooks the `Edit` tool and fires per load-bearing *file* (one containing a hot symbol), not per *change* — so a repo-wide lint cleanup hits a guard prompt on every hot file even though each fix is inert. First reach for the toolchain's own autofixer (`cargo clippy --fix --all-targets --allow-dirty`, `cargo fmt`, `ruff --fix`, etc.): it writes to disk directly, bypassing the hook entirely, handles the machine-applicable lints in one pass, and costs a fraction of the tokens. Then run tests. Only the lints that need a judgment call (scoped `#[allow]`, keep-vs-collapse decisions) remain as hand-edits — and for those, batch the `sutra_impact` acks up front (one parallel pass over the target files) instead of hitting the guard reactively one retry at a time.
-
 Lessons system: sutra maintains a cross-project lessons store (~/.sutra/lessons.db) for code-anchored knowledge that future editors need.
 - **Store**: `sutra_remember(text, anchors)` — anchors are symbol names or file paths where the lesson applies. Sutra auto-enriches with import patterns and category tags.
 - **Surface**: lessons appear inline in `sutra_read`, `sutra_impact`, and `sutra_orient` when anchors match. `sutra_lessons` does explicit search.
