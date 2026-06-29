@@ -179,7 +179,7 @@ impl SanghaLockClient {
             .filter(|line| line.starts_with("data: "))
             .map(|line| &line[6..])
             .filter(|s| !s.is_empty())
-            .last()
+            .next_back()
             .context("no JSON payload in sangha SSE response")?;
 
         let parsed: serde_json::Value =

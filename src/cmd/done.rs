@@ -60,25 +60,21 @@ fn resolve_transcript_path(binding: &Binding) -> Option<PathBuf> {
     if let Some(dir) = adapter
         .transcript_path(binding)
         .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+        && dir.exists()
+        && let Ok(mut entries) = std::fs::read_dir(&dir)
     {
-        if dir.exists() {
-            if let Ok(mut entries) = std::fs::read_dir(&dir) {
-                let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;
-                while let Some(Ok(entry)) = entries.next() {
-                    let path = entry.path();
-                    if path.extension().and_then(|e| e.to_str()) == Some("jsonl") {
-                        if let Ok(meta) = path.metadata() {
-                            if let Ok(modified) = meta.modified() {
-                                if newest.as_ref().map_or(true, |(t, _)| modified > *t) {
-                                    newest = Some((modified, path));
-                                }
-                            }
-                        }
-                    }
-                }
-                return newest.map(|(_, p)| p);
+        let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;
+        while let Some(Ok(entry)) = entries.next() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some("jsonl")
+                && let Ok(meta) = path.metadata()
+                && let Ok(modified) = meta.modified()
+                && newest.as_ref().is_none_or(|(t, _)| modified > *t)
+            {
+                newest = Some((modified, path));
             }
         }
+        return newest.map(|(_, p)| p);
     }
 
     None

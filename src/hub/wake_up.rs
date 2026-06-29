@@ -32,26 +32,26 @@ pub async fn run(chitta_url: &str, yojana_url: &str, args: serde_json::Value) ->
     let mut source_profile_entries = 0;
     let mut source_tasks = 0;
 
-    if let Ok(entries) = profile_entries {
-        if !entries.is_empty() {
-            source_profile_entries = entries.len();
-            let mut lines = vec!["## profile context".to_string()];
-            for entry in &entries {
-                lines.push(format!("- {}", entry));
-            }
-            sections.push(lines.join("\n"));
+    if let Ok(entries) = profile_entries
+        && !entries.is_empty()
+    {
+        source_profile_entries = entries.len();
+        let mut lines = vec!["## profile context".to_string()];
+        for entry in &entries {
+            lines.push(format!("- {}", entry));
         }
+        sections.push(lines.join("\n"));
     }
 
-    if let Ok(tsks) = tasks {
-        if !tsks.is_empty() {
-            source_tasks = tsks.len();
-            let mut lines = vec!["## open tasks".to_string()];
-            for t in &tsks {
-                lines.push(format!("- {}", t));
-            }
-            sections.push(lines.join("\n"));
+    if let Ok(tsks) = tasks
+        && !tsks.is_empty()
+    {
+        source_tasks = tsks.len();
+        let mut lines = vec!["## open tasks".to_string()];
+        for t in &tsks {
+            lines.push(format!("- {}", t));
         }
+        sections.push(lines.join("\n"));
     }
 
     if sections.is_empty() {
@@ -247,7 +247,7 @@ async fn mcp_call(
         .filter(|line| line.starts_with("data: "))
         .map(|line| &line[6..])
         .filter(|s| !s.is_empty())
-        .last()
+        .next_back()
         .unwrap_or(&text);
 
     serde_json::from_str(json_line).context("parsing response JSON")
