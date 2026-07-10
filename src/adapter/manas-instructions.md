@@ -25,18 +25,19 @@ When you learn something a future editor of this code needs to know — a hidden
 
 <coding_discipline>
 Global language guardrails to enforce zero-cost abstractions, idiomatic memory management, and clean architecture. Agents must prioritize structural design over localized "quick fixes" that appease the compiler at the cost of performance.
+Principles marked [enforced] have matching sutra forbidden_pattern rules in vidhi/language-rules/ — the guard blocks or warns on new violations at edit time.
 <rust>
-No Clone-Driven Development: Do not use `.clone()` or `.to_owned()` simply to bypass borrow checker errors. If data flow requires sharing, design proper reference structures (`&`, `&mut`) and explicit lifetimes (`'a`).
-Prefer Slices Over Containers Function arguments that only read data MUST accept slices (`&str`, `&[T]`) rather than owned collections (`String`, `Vec<T>`). Never force the caller to allocate on the heap just to pass an argument.
-Avoid Premature Dynamic Allocation Do not wrap traits in `Box<dyn Trait>` or multi-threaded wrappers (`Arc<Mutex<T>>`) solely because you cannot resolve generic constraints or lifetime bounds. Default to static dispatch (`impl Trait` or generics) unless a heterogeneous collection or true runtime dynamic dispatch is required.
-Graph & Tree Semantics When traversing graphs, trees, or stacks (e.g., in compilers or trackers), track lightweight identifiers (`i64`, internal indices) through recursive scopes rather than dragging heap-allocated strings or cloning state structures through loops.
+No Clone-Driven Development: Do not use `.clone()` or `.to_owned()` simply to bypass borrow checker errors. If data flow requires sharing, design proper reference structures (`&`, `&mut`) and explicit lifetimes (`'a`). [enforced: no-clone-driven-dev, no-to-owned-bypass]
+Prefer Slices Over Containers Function arguments that only read data MUST accept slices (`&str`, `&[T]`) rather than owned collections (`String`, `Vec<T>`). Never force the caller to allocate on the heap just to pass an argument. [prose-only]
+Avoid Premature Dynamic Allocation Do not wrap traits in `Box<dyn Trait>` or multi-threaded wrappers (`Arc<Mutex<T>>`) solely because you cannot resolve generic constraints or lifetime bounds. Default to static dispatch (`impl Trait` or generics) unless a heterogeneous collection or true runtime dynamic dispatch is required. [prose-only]
+Graph & Tree Semantics When traversing graphs, trees, or stacks (e.g., in compilers or trackers), track lightweight identifiers (`i64`, internal indices) through recursive scopes rather than dragging heap-allocated strings or cloning state structures through loops. [prose-only]
 </rust>
 
 <dart/flutter>
-Strict Typing (No Dynamic): Avoid using `dynamic` or implicit `Object` types to escape strict typing. Use generics (`<T>`) or explicit interface abstractions.
-Enforce Const Constructors: Always maximize the use of `const` variables and constructors. In UI compilation paths or structural collections, omitting `const` causes unnecessary heap allocations and breaks rendering optimizations.
-Defensive Null Safety: Do not spam the exclamation mark null-assertion operator (`!`) to clear type errors. Use proper null-coalescing (`??`), conditional access (`?.`), or explicit `if (variable != null)` blocks to establish safe execution tracks.
-Cascade & Collection Operators: Use cascade operators (`..`) and collection-if/collection-for operators instead of writing imperative boilerplate to instantiate and mutate maps or lists.
+Strict Typing (No Dynamic): Avoid using `dynamic` or implicit `Object` types to escape strict typing. Use generics (`<T>`) or explicit interface abstractions. [enforced: no-dynamic-type]
+Enforce Const Constructors: Always maximize the use of `const` variables and constructors. In UI compilation paths or structural collections, omitting `const` causes unnecessary heap allocations and breaks rendering optimizations. [prose-only]
+Defensive Null Safety: Do not spam the exclamation mark null-assertion operator (`!`) to clear type errors. Use proper null-coalescing (`??`), conditional access (`?.`), or explicit `if (variable != null)` blocks to establish safe execution tracks. [enforced: no-bang-null-assertion]
+Cascade & Collection Operators: Use cascade operators (`..`) and collection-if/collection-for operators instead of writing imperative boilerplate to instantiate and mutate maps or lists. [prose-only]
 </dart/flutter>
 </coding_discipline>
 <smriti_cli>
