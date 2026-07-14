@@ -1,16 +1,15 @@
 <sutra_mcp>
 Use sutra tools instead of built-in file tools for code:
 - Glob/find → `sutra_map`
-- Grep/rg → `sutra_grep` or `sutra_find`
+- Grep/rg → `sutra_grep` or `sutra_explore`
 - Read (code) → `sutra_read`
-Run `sutra_status` first to verify workspace freshness; `sutra_add_root` only to force a reparse. Call `sutra_impact` before editing a load-bearing file. Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
-When exploring an unfamiliar area of the codebase, start with `sutra_explore(query, workspace)` — one call replaces iterative map/outline/grep cycles. It returns a ranked symbol list with literal `sutra_read` fetch instructions and a strategy hint (read_top_n, read_all, narrow_query, explore_component). Use the strategy to decide your next action rather than reasoning about navigation yourself. For qualified symbol names (containing `::`), it falls through to exact lookup automatically.
-Projects can define human-readable aliases for components, files, and symbols in `.sutra/aliases.toml`. Use `sutra_resolve` to look up domain terms (e.g. "being detail cards") → code locations. Check for an aliases file before doing broad searches for a domain concept.
+Run `sutra_workspace(path=...)` first to verify workspace freshness; pass `action="reparse"` to force a reparse. Call `sutra_impact` before editing a load-bearing file. Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
+When exploring an unfamiliar area of the codebase, start with `sutra_explore(query, workspace)` — one call replaces iterative map/outline/grep cycles. It returns a ranked symbol list with literal `sutra_read` fetch instructions and a strategy hint (read_top_n, read_all, narrow_query, explore_component). Use the strategy to decide your next action rather than reasoning about navigation yourself. For qualified symbol names (containing `::`), it falls through to exact lookup automatically. For domain terms defined in `.sutra/aliases.toml`, explore resolves them as its first priority tier.
+Use `sutra_context(symbol, workspace)` when you need the full neighborhood of a symbol (deps + dependents) packed within a token budget — ideal for subagent briefings or understanding a symbol before modifying it.
 
 Exploration protocol (applies to all agents including subagents):
-1. Domain term or component name? → `sutra_resolve` first (aliases map human names to symbols/files).
-2. Concept, behavior, or "where is X?" → `sutra_explore` first. One call beats grep+read loops.
-3. Fall back to `sutra_grep`/`sutra_map` only when explore returns nothing or the query is a literal string pattern.
+1. Domain term, component name, or symbol name? → `sutra_explore` first (resolves aliases, qualified names, and fuzzy queries).
+2. Fall back to `sutra_grep`/`sutra_map` only when explore returns nothing or the query is a literal string pattern.
 Do NOT skip to built-in grep/Read for code exploration. sutra_explore is faster than iterative grep+read and returns ranked results with fetch instructions.
 
 sutra_read discipline: always discover the symbol name before reading. Use `sutra_explore` or `sutra_grep` first — don't guess names. Guessed names fail often (e.g. `Db::save_snapshot` when it's actually `Db::insert_snapshot`). Explore-then-read is one extra call; guess-and-miss is two calls plus a red error.
