@@ -20,6 +20,7 @@ Lessons system: sutra maintains a cross-project lessons store (~/.sutra/lessons.
 - **Cite**: when closing a task that validates a lesson, call `sutra_remember(cite="<lesson_id>", source_tasks=["<task_id>"])`. Citations build confidence; uncited lessons decay and are eventually archived.
 - **Scope**: lessons attach to technologies and patterns, not projects. A lesson learned in one workspace surfaces wherever its anchors match.
 When you learn something a future editor of this code needs to know — a hidden constraint, a non-obvious invariant, a failure mode — store it with `sutra_remember`. Don't store routine facts already visible in the code.
+Before writing a new module or component, run `sutra_lessons(query=<what you're building>)` to surface constraints and failure modes from prior work across projects.
 </sutra_mcp>
 
 <coding_discipline>
