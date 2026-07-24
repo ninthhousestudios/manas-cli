@@ -25,7 +25,7 @@ Before writing a new module or component, run `sutra_lessons(query=<what you're 
 
 <coding_discipline>
 Global language guardrails to enforce zero-cost abstractions, idiomatic memory management, and clean architecture. Agents must prioritize structural design over localized "quick fixes" that appease the compiler at the cost of performance.
-Principles marked [enforced] have matching sutra forbidden_pattern rules in vidhi/language-rules/ — the guard blocks or warns on new violations at edit time.
+Principles marked [enforced] have matching sutra forbidden_pattern rules in vidhi/language-rules/ — the guard blocks or warns on new violations at edit time. [analyzer] marks principles enforced by the shared toolchain baselines (Rust workspace [lints.clippy]; Dart house analysis_options.yaml, canonical copy in vidhi/vidhi-dart/).
 <rust>
 No Clone-Driven Development: Do not use `.clone()` or `.to_owned()` simply to bypass borrow checker errors. If data flow requires sharing, design proper reference structures (`&`, `&mut`) and explicit lifetimes (`'a`). [enforced: no-clone-driven-dev, no-to-owned-bypass]
 Prefer Slices Over Containers Function arguments that only read data MUST accept slices (`&str`, `&[T]`) rather than owned collections (`String`, `Vec<T>`). Never force the caller to allocate on the heap just to pass an argument. [prose-only]
@@ -37,9 +37,10 @@ No Lint Silencing: Never add `#[allow(...)]` to quiet a lint — fix it, use `#[
 
 <dart/flutter>
 Strict Typing (No Dynamic): Avoid using `dynamic` or implicit `Object` types to escape strict typing. Use generics (`<T>`) or explicit interface abstractions. [enforced: no-dynamic-type]
-Enforce Const Constructors: Always maximize the use of `const` variables and constructors. In UI compilation paths or structural collections, omitting `const` causes unnecessary heap allocations and breaks rendering optimizations. [prose-only]
+Enforce Const Constructors: Always maximize the use of `const` variables and constructors. In UI compilation paths or structural collections, omitting `const` causes unnecessary heap allocations and breaks rendering optimizations. [analyzer: prefer_const_constructors + friends]
 Defensive Null Safety: Do not spam the exclamation mark null-assertion operator (`!`) to clear type errors. Use proper null-coalescing (`??`), conditional access (`?.`), or explicit `if (variable != null)` blocks to establish safe execution tracks. [enforced: no-bang-null-assertion]
-Cascade & Collection Operators: Use cascade operators (`..`) and collection-if/collection-for operators instead of writing imperative boilerplate to instantiate and mutate maps or lists. [prose-only]
+Cascade & Collection Operators: Use cascade operators (`..`) and collection-if/collection-for operators instead of writing imperative boilerplate to instantiate and mutate maps or lists. [analyzer: cascade_invocations, prefer_spread_collections, prefer_if_elements_to_conditional_expressions]
+No Lint Silencing: Never add `// ignore:` or `// ignore_for_file:` to quiet a diagnostic — fix it or waive via sutra with rationale (Dart has no `#[expect]` analog). [enforced: no-ignore-comments]
 </dart/flutter>
 
 Types-first gate: for a non-trivial new Rust/Dart unit (module or subsystem with a real data model), Josh may invoke `vidhi-types-first` — type skeleton (data types, signatures, error taxonomy, no bodies) reviewed before implementation. When a task qualifies and it wasn't invoked, suggest it in one line; don't start it unbidden.
