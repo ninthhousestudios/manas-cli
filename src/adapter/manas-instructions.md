@@ -71,10 +71,6 @@ Close-out fields are mined by vidhi-reflect for cross-project lessons — write 
 - done means landed: if the branch is unmerged, the service not redeployed, or a verification step pending at close, say so in execution_record AND file the follow-up task. Closing over silent pending work is the gap (yojana/32-33, justifier/1, swisseph.dart/2).
 </capture_discipline>
 
-<project_handoffs>
-Handoffs live in the yojana project's `handoff` field, NOT `docs/handoff.md`. Update via `yojana_project action=update slug=<project> handoff="..."`. Content: where the project IS (state, in-progress streams, recent landings) plus next-up pointers by `slug/N`. Keep tight — readers fetch via `yojana_project action=get`. Cross-project queues belong in tracking, not one project's handoff. If a legacy `docs/handoff.md` exists, archive its content to `.handoffs/{datetime}.md` (git-tracked, project root) and replace it with a one-screen pointer to the yojana queries.
-</project_handoffs>
-
 <stream_tracking>
 `yojana_query status="in-progress"` (omit `project=` for cross-project) returns everything underway — cap at 3-5; more means you've started things you haven't finished and the list lies. For a hand-curated "next up" lane, tag tasks `now` and query `yojana_query tag="now"`.
 </stream_tracking>
