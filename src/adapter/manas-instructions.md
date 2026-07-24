@@ -31,6 +31,8 @@ No Clone-Driven Development: Do not use `.clone()` or `.to_owned()` simply to by
 Prefer Slices Over Containers Function arguments that only read data MUST accept slices (`&str`, `&[T]`) rather than owned collections (`String`, `Vec<T>`). Never force the caller to allocate on the heap just to pass an argument. [prose-only]
 Avoid Premature Dynamic Allocation Do not wrap traits in `Box<dyn Trait>` or multi-threaded wrappers (`Arc<Mutex<T>>`) solely because you cannot resolve generic constraints or lifetime bounds. Default to static dispatch (`impl Trait` or generics) unless a heterogeneous collection or true runtime dynamic dispatch is required. [prose-only]
 Graph & Tree Semantics When traversing graphs, trees, or stacks (e.g., in compilers or trackers), track lightweight identifiers (`i64`, internal indices) through recursive scopes rather than dragging heap-allocated strings or cloning state structures through loops. [prose-only]
+Panic Discipline: Recoverable failures propagate (`Result`, `?`); violated invariants panic via `.expect("invariant: ...")` naming what would have to break — never bare `.unwrap()` outside tests. [enforced: no-unwrap + workspace clippy unwrap_used]
+No Lint Silencing: Never add `#[allow(...)]` to quiet a lint — fix it, use `#[expect(lint, reason = "...")]`, or waive via sutra with rationale. `unsafe` blocks state their invariant as the waiver rationale. [enforced: no-allow-attributes, unsafe-requires-waiver, no-todo-unimplemented]
 </rust>
 
 <dart/flutter>
@@ -39,6 +41,8 @@ Enforce Const Constructors: Always maximize the use of `const` variables and con
 Defensive Null Safety: Do not spam the exclamation mark null-assertion operator (`!`) to clear type errors. Use proper null-coalescing (`??`), conditional access (`?.`), or explicit `if (variable != null)` blocks to establish safe execution tracks. [enforced: no-bang-null-assertion]
 Cascade & Collection Operators: Use cascade operators (`..`) and collection-if/collection-for operators instead of writing imperative boilerplate to instantiate and mutate maps or lists. [prose-only]
 </dart/flutter>
+
+Types-first gate: for a non-trivial new Rust/Dart unit (module or subsystem with a real data model), Josh may invoke `vidhi-types-first` — type skeleton (data types, signatures, error taxonomy, no bodies) reviewed before implementation. When a task qualifies and it wasn't invoked, suggest it in one line; don't start it unbidden.
 </coding_discipline>
 <smriti_cli>
 For non-code files (docs, configs, data), prefer smriti over shell:
