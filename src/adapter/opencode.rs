@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use tokio::process::Command;
 
-use super::{HarnessAdapter, HarnessHandle, chitta_token};
+use super::{HarnessAdapter, HarnessHandle};
 use crate::binding::Binding;
 
 pub struct OpencodeAdapter;
@@ -12,26 +12,11 @@ impl OpencodeAdapter {
     fn write_mcp_config(binding: &Binding) -> Result<PathBuf> {
         let config_path = binding.project_root.join("opencode.json");
 
-        let mut chitta_entry = serde_json::json!({
-            "type": "remote",
-            "url": format!("{}/mcp", binding.chitta_url),
-        });
-        if let Some(token) = chitta_token()? {
-            chitta_entry["headers"] = serde_json::json!({
-                "Authorization": format!("Bearer {}", token),
-            });
-        }
-
         let config = serde_json::json!({
             "mcp": {
-                "chitta": chitta_entry,
                 "yojana": {
                     "type": "remote",
                     "url": format!("{}/mcp", binding.yojana_url),
-                },
-                "smriti": {
-                    "type": "remote",
-                    "url": format!("{}/mcp", binding.smriti_url),
                 },
                 "sutra": {
                     "type": "local",

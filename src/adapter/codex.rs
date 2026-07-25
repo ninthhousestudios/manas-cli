@@ -4,7 +4,7 @@ use std::process::Stdio;
 use anyhow::{Context, Result};
 use tokio::process::Command;
 
-use super::{HarnessAdapter, HarnessHandle, chitta_token};
+use super::{HarnessAdapter, HarnessHandle};
 use crate::binding::Binding;
 
 pub struct CodexCliAdapter;
@@ -21,12 +21,9 @@ impl CodexCliAdapter {
         let config_path = codex_home.join("config.toml");
 
         let toml = format!(
-            "[mcp_servers.chitta]\nurl = \"{}/mcp\"\n\
-             bearer_token_env_var = \"CHITTA_TOKEN\"\n\n\
-             [mcp_servers.yojana]\nurl = \"{}/mcp\"\n\n\
-             [mcp_servers.smriti]\nurl = \"{}/mcp\"\n\n\
+            "[mcp_servers.yojana]\nurl = \"{}/mcp\"\n\n\
              [mcp_servers.sutra]\ncommand = \"sutra\"\nargs = [\"serve\", \"--stdio\"]\n",
-            binding.chitta_url, binding.yojana_url, binding.smriti_url,
+            binding.yojana_url,
         );
 
         std::fs::write(&config_path, &toml)?;
@@ -54,10 +51,6 @@ impl HarnessAdapter for CodexCliAdapter {
 
         for (key, val) in binding.env_vars() {
             cmd.env(&key, &val);
-        }
-
-        if let Some(token) = chitta_token()? {
-            cmd.env("CHITTA_TOKEN", token);
         }
 
         cmd.current_dir(&binding.project_root);
