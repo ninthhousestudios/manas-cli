@@ -69,9 +69,6 @@ Close-out fields are mined by vidhi-reflect for cross-project lessons — write 
 - done means landed. Branch unmerged, service not redeployed, or a verification step pending at close? Say so in execution_record AND file the follow-up task — closing over silent pending work is the gap (yojana/32-33, justifier/1, swisseph.dart/2).
 </capture_discipline>
 
-<stream_tracking>
-`yojana_query status="in-progress"` (omit `project=` for cross-project) returns everything underway — cap at 3-5; more means you've started things you haven't finished and the list lies. For a hand-curated "next up" lane, tag tasks `now` and query `yojana_query tag="now"`.
-</stream_tracking>
 </yojana_issue_tracker>
 
 <artifact_routing>
