@@ -6,6 +6,7 @@ mod binding;
 mod cmd;
 mod config;
 mod hub;
+mod instructions;
 mod skill;
 
 #[derive(Parser)]

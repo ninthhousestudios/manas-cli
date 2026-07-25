@@ -21,7 +21,7 @@ fn warm_prints_session_info_then_fails_without_claude() {
         "expected session id in stdout: {stdout}"
     );
     assert!(
-        stdout.contains("manas:") && stdout.contains("chitta:") && stdout.contains("yojana:"),
+        stdout.contains("chitta:") && stdout.contains("yojana:") && stdout.contains("smriti:"),
         "expected service URLs in stdout: {stdout}"
     );
     assert!(

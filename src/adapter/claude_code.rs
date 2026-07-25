@@ -5,10 +5,9 @@ use tokio::process::Command;
 
 use super::{HarnessAdapter, HarnessHandle, chitta_token};
 use crate::binding::Binding;
+use crate::instructions;
 
 pub struct ClaudeCodeAdapter;
-
-const MANAS_INSTRUCTIONS: &str = include_str!("manas-instructions.md");
 
 impl ClaudeCodeAdapter {
     fn mcp_config_path(binding: &Binding) -> PathBuf {
@@ -59,8 +58,12 @@ impl ClaudeCodeAdapter {
 
     fn write_instructions(binding: &Binding) -> Result<PathBuf> {
         let path = Self::instructions_path(binding);
-        std::fs::create_dir_all(path.parent().unwrap())?;
-        std::fs::write(&path, MANAS_INSTRUCTIONS)?;
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        // The scratch copy is what made a stale prompt diagnosable, so it has
+        // to be byte-identical to what we inject, footer included.
+        std::fs::write(&path, &instructions::resolve().text)?;
         Ok(path)
     }
 }

@@ -51,11 +51,23 @@ manas-cli includes adapter modules for launching different AI coding agents with
 
 ### Instruction split
 
-Session-lifecycle instructions (sangha registration, chitta health checks, sutra/smriti tool preferences, yojana discipline, observation protocol) are compiled into the `manas` binary from `src/adapter/manas-instructions.md` and injected at launch via `--append-system-prompt-file`. This means:
+Session-lifecycle instructions (sangha registration, chitta health checks, sutra/smriti tool preferences, yojana discipline, observation protocol) are injected at launch via `--append-system-prompt-file`. This means:
 
 - `manas warm claude` — top-level session gets full manas operating instructions + MCP servers
 - `claude` (bare) — no manas instructions, no manas MCP servers
 - Subagents spawned via the Agent tool — inherit MCP tool access but **not** the appended system prompt, so they won't perform session-lifecycle rituals
 
 General-purpose instructions (personality, naming conventions, commit discipline) stay in `~/CLAUDE.md` and are visible to all sessions including subagents.
+
+### Where the instructions are read from
+
+Resolution happens at launch, not at compile time — editing the live file takes effect on the next `manas warm`, with no rebuild:
+
+1. `$MANAS_INSTRUCTIONS`, if set.
+2. `~/.manas/manas-instructions.md`. If it doesn't exist, `manas` seeds it from the copy compiled into the binary (`src/adapter/manas-instructions.md`), so the editable file is discoverable rather than opt-in.
+3. The compiled-in copy, if neither is readable (a warning says why).
+
+`manas warm` prints the source it used on the `prompt:` line, and the injected text ends with a provenance comment naming the source path, its mtime, and a content hash — so a running session can answer "which instructions am I running?" by reading its own system prompt. The exact bytes injected are also written to `~/.manas/sessions/<id>/manas-instructions.md`.
+
+Note the consequence: once `~/.manas/manas-instructions.md` exists, edits to `src/adapter/manas-instructions.md` only affect fresh installs. Keep the repo copy as the canonical source and re-seed (move the live file aside) after changing it, or point `$MANAS_INSTRUCTIONS` at a checkout.
 
