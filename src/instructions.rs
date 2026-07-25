@@ -117,6 +117,16 @@ fn from_default_path() -> Instructions {
 
     match read_file(&path) {
         Ok(instructions) => instructions,
+        // A dangling symlink also reads as NotFound, but seeding it would
+        // follow the link and write through to wherever it points — usually a
+        // checkout that has moved. Report it instead.
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound && is_symlink(&path) => {
+            eprintln!(
+                "  warning:  {} is a broken symlink; using compiled-in instructions",
+                path.display()
+            );
+            baked_in()
+        }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => match seed(&path) {
             Ok(instructions) => instructions,
             Err(e) => {
@@ -142,6 +152,10 @@ fn default_path() -> Option<PathBuf> {
     Some(PathBuf::from(home).join(".manas").join(FILE_NAME))
 }
 
+fn is_symlink(path: &Path) -> bool {
+    std::fs::symlink_metadata(path).is_ok_and(|m| m.file_type().is_symlink())
+}
+
 fn read_file(path: &Path) -> std::io::Result<Instructions> {
     let text = std::fs::read_to_string(path)?;
     let mtime_epoch = std::fs::metadata(path)
@@ -150,11 +164,16 @@ fn read_file(path: &Path) -> std::io::Result<Instructions> {
         .and_then(|m| m.duration_since(UNIX_EPOCH).ok())
         .map(|d| d.as_secs());
 
+    // Report the real target: `~/.manas/manas-instructions.md` is expected to
+    // be a symlink into a checkout, and naming the link instead of the file it
+    // resolves to is the ambiguity this whole task exists to remove.
+    let path = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+
     Ok(Instructions {
         hash: fnv1a64(text.as_bytes()),
         text,
         source: Source::File {
-            path: path.to_path_buf(),
+            path,
             seeded: false,
         },
         mtime_epoch,

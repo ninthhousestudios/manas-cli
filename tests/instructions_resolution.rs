@@ -4,6 +4,9 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// Mirrors `instructions::FILE_NAME` — integration tests can't see private items.
+const FILE_NAME: &str = "manas-instructions.md";
+
 /// Run `manas warm` with an isolated HOME and no `claude` on PATH, so the
 /// adapter writes its scratch files and then fails to spawn. Returns
 /// (stdout, session scratch dir).
@@ -113,6 +116,67 @@ fn injected_copy_carries_provenance() {
         injected.contains("fnv1a64=") && injected.contains("mtime_epoch="),
         "provenance should carry a hash and mtime: {injected}"
     );
+}
+
+/// The intended setup: `~/.manas/manas-instructions.md` is a symlink into the
+/// repo checkout, so the committed file is what actually runs.
+#[test]
+fn symlinked_default_path_reads_through_and_reports_the_target() {
+    let home = temp_home("symlink");
+    let target = home.join("checkout-instructions.md");
+    std::fs::write(&target, "SENTINEL from the checkout\n").expect("failed to write target");
+
+    let link = home.join(".manas").join(FILE_NAME);
+    std::fs::create_dir_all(link.parent().expect("has a parent")).expect("failed to mkdir");
+    std::os::unix::fs::symlink(&target, &link).expect("failed to symlink");
+
+    let (stdout, scratch) = warm_isolated(&home, &[]);
+    assert!(
+        !stdout.contains("(seeded)"),
+        "an existing symlink must not be reseeded: {stdout}"
+    );
+    assert!(
+        stdout.contains(target.to_str().expect("utf-8 path")),
+        "warm should name the symlink target, not the link: {stdout}"
+    );
+
+    let injected = std::fs::read_to_string(scratch.join("manas-instructions.md"))
+        .expect("scratch copy should exist");
+    assert!(injected.contains("SENTINEL from the checkout"));
+    assert!(
+        injected.contains(&format!("source={}", target.display())),
+        "provenance should name the resolved target: {injected}"
+    );
+    assert!(
+        std::fs::symlink_metadata(&link)
+            .expect("link should survive")
+            .file_type()
+            .is_symlink(),
+        "the symlink must not have been replaced by a regular file"
+    );
+}
+
+#[test]
+fn broken_symlink_falls_back_instead_of_writing_through() {
+    let home = temp_home("broken-symlink");
+    let target = home.join("moved-away.md");
+    let link = home.join(".manas").join(FILE_NAME);
+    std::fs::create_dir_all(link.parent().expect("has a parent")).expect("failed to mkdir");
+    std::os::unix::fs::symlink(&target, &link).expect("failed to symlink");
+
+    let (stdout, scratch) = warm_isolated(&home, &[]);
+    assert!(
+        stdout.contains("compiled-in"),
+        "a dangling link should fall back: {stdout}"
+    );
+    assert!(
+        !target.exists(),
+        "seeding must not write through a dangling symlink to a moved checkout"
+    );
+
+    let injected = std::fs::read_to_string(scratch.join("manas-instructions.md"))
+        .expect("scratch copy should exist");
+    assert!(injected.contains("source=compiled-in"));
 }
 
 #[test]

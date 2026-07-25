@@ -69,5 +69,15 @@ Resolution happens at launch, not at compile time — editing the live file take
 
 `manas warm` prints the source it used on the `prompt:` line, and the injected text ends with a provenance comment naming the source path, its mtime, and a content hash — so a running session can answer "which instructions am I running?" by reading its own system prompt. The exact bytes injected are also written to `~/.manas/sessions/<id>/manas-instructions.md`.
 
-Note the consequence: once `~/.manas/manas-instructions.md` exists, edits to `src/adapter/manas-instructions.md` only affect fresh installs. Keep the repo copy as the canonical source and re-seed (move the live file aside) after changing it, or point `$MANAS_INSTRUCTIONS` at a checkout.
+Symlinks are read through, and both the `prompt:` line and the provenance comment name the resolved target rather than the link. A dangling link falls back to the compiled-in copy with a warning instead of being re-seeded — seeding would follow the link and write through to a checkout that has moved.
+
+### Recommended dev setup
+
+Point the live path at your checkout, so the committed file is what actually runs and git stays the source of truth:
+
+```sh
+ln -s "$PWD/src/adapter/manas-instructions.md" ~/.manas/manas-instructions.md
+```
+
+Without this, the seeded copy at `~/.manas/manas-instructions.md` diverges silently: edits to `src/adapter/manas-instructions.md` would then only affect fresh installs. `$MANAS_INSTRUCTIONS` achieves the same thing per-process, but the symlink applies to every `manas` invocation regardless of environment.
 
