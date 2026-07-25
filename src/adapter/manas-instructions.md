@@ -53,6 +53,12 @@ When tasks come from an explicit triage process (review, decompose, planning), s
 Full enum and transitions: `~/soft/manas/yojana/README.md` § "Status model."
 </triage_discipline>
 
+<execution_discipline>
+"Do <project>/<N>" means: `yojana_task action=get`, then **immediately** `yojana_task action=update status="in-progress"` — before any exploration, edit or delegation. Not at the end, not batched into the closing update.
+
+This is not bookkeeping. The status machine has no direct edge from `ready-for-agent`/`ready-for-human` to `done`, so a close that skips it is rejected and costs a wasted round trip; `in-progress` is also the only signal that the work is underway while it is underway (see stream_tracking).
+</execution_discipline>
+
 <capture_discipline>
 Close-out fields are mined by vidhi-reflect for cross-project lessons — write them for a reader with no transcript.
 - Closing a `bug`: root_cause is REQUIRED — the mechanism (why it broke), 1-3 sentences, not a restatement of the fix; the fix goes in execution_record. Genuinely unknown → "unknown:" plus what was ruled out.
