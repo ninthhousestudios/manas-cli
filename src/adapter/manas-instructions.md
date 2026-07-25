@@ -68,29 +68,6 @@ Close-out fields are mined by vidhi-reflect for cross-project lessons — write 
 </stream_tracking>
 </yojana_issue_tracker>
 
-<chitta_josh_model>
-Working model of Josh — values, preferences, patterns, mental models. NOT a general memory store. systemd user service; if chitta seems unavailable call `mcp__chitta__health_check`, and if that fails **tell Josh immediately**.
-- `get_profile` loads the model — only run when told directly.
-- Given a memory id, use `get_memory` (prefixes work). For context-specific retrieval, `search_memories` with `applies_to` facets (domains, skills, projects, situations).
-
-<what_goes_in_chitta>
-Only content modeling Josh as a person.
-- **Observations** — 1-3 sentences on preferences, values, corrections, patterns. `memory_type:"observation"`, `profile:"josh"`, topical tags.
-- **Decisions** — only with working-model signal. MUST carry non-empty `metadata.rationale` and `metadata.rejected_alternatives` (≥1); the server hard-rejects otherwise. When in doubt, demote to observation.
-- **Episodes** — session-bounded units written by the `done` skill, with `derivations` pointing at that session's observations.
-NOT: doc summaries (disk is the source of truth); project handoffs and project-artifact decisions like "we picked Postgres for chitta" → yojana; domain knowledge → vidya (planned).
-</what_goes_in_chitta>
-
-<during_session_observations>
-Store observations proactively — no announcement, no permission. Trigger on:
-- Josh corrects something or pushes back (preferences/values)
-- An approach is tried and fails (negative knowledge)
-- A non-obvious constraint or requirement surfaces
-- It would be hard to reconstruct from the transcript alone
-Don't store: routine code changes, things already in docs/code, trivial exchanges, content that just restates the transcript, project-artifact decisions.
-</during_session_observations>
-</chitta_josh_model>
-
 <artifact_routing>
 - Living artifacts (specs, plans, principles) → git-tracked, human-editable `docs/`
 - Agent operating instructions → `CLAUDE.md` only (never project knowledge or decisions)
