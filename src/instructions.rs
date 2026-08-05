@@ -13,6 +13,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const BAKED_IN: &str = include_str!("adapter/manas-instructions.md");
 const FILE_NAME: &str = "manas-instructions.md";
 const ENV_OVERRIDE: &str = "MANAS_INSTRUCTIONS";
+const USER_FILE_NAME: &str = "CLAUDE.md";
+const USER_ENV_OVERRIDE: &str = "MANAS_USER_INSTRUCTIONS";
 
 /// Where the resolved instructions came from.
 pub enum Source {
@@ -91,6 +93,51 @@ fn resolve_uncached() -> Instructions {
         .text
         .push_str(&instructions.provenance_footer());
     instructions
+}
+
+/// The whole prompt for harnesses that have no system-prompt flag and can only
+/// be reached through an on-disk conventions file (Codex's `AGENTS.md`).
+///
+/// Claude Code gets these as two independent channels: it discovers
+/// `~/CLAUDE.md` itself by walking parent directories, and takes the manas
+/// instructions via `--append-system-prompt-file`. Codex does neither, so both
+/// have to arrive concatenated or a codex session runs with neither.
+pub fn combined() -> &'static str {
+    static COMBINED: OnceLock<String> = OnceLock::new();
+    COMBINED.get_or_init(|| match user_preamble() {
+        Some(preamble) => format!("{}\n\n{}", preamble.trim_end(), resolve().text),
+        None => resolve().text.clone(),
+    })
+}
+
+/// The user's own global instructions, carrying the same kind of provenance
+/// header the manas instructions carry — a session that ends up with a stale
+/// preamble should be able to read where it came from off its own prompt.
+fn user_preamble() -> Option<String> {
+    let path = match std::env::var_os(USER_ENV_OVERRIDE) {
+        Some(raw) => PathBuf::from(raw),
+        None => PathBuf::from(std::env::var_os("HOME")?).join(USER_FILE_NAME),
+    };
+
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return None,
+        Err(e) => {
+            eprintln!(
+                "  warning:  {} unreadable ({e}); continuing without the user preamble",
+                path.display()
+            );
+            return None;
+        }
+    };
+
+    let source = std::fs::canonicalize(&path).unwrap_or(path);
+    Some(format!(
+        "<!-- manas user preamble: source={} fnv1a64={:016x} -->\n{}",
+        source.display(),
+        fnv1a64(text.as_bytes()),
+        text,
+    ))
 }
 
 fn from_env_override(path: PathBuf) -> Instructions {
