@@ -5,14 +5,41 @@ use tokio::process::Command;
 
 use super::{HarnessAdapter, HarnessHandle};
 use crate::binding::Binding;
+use crate::instructions;
 
 pub struct OpencodeAdapter;
 
 impl OpencodeAdapter {
-    fn write_mcp_config(binding: &Binding) -> Result<PathBuf> {
-        let config_path = binding.project_root.join("opencode.json");
+    fn opencode_home() -> PathBuf {
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());
+        PathBuf::from(home).join(".manas").join("opencode")
+    }
 
+    /// Write the manas config and instructions into a manas-owned dir and hand
+    /// opencode its path via `OPENCODE_CONFIG`. That env var *merges* onto the
+    /// user's global config rather than replacing it (verified: `opencode debug
+    /// config` shows global providers/auth surviving), so we only declare what
+    /// manas owns and inherit the rest.
+    ///
+    /// The previous implementation wrote `opencode.json` into the user's repo,
+    /// clobbering any hand-written project config and littering their working
+    /// tree — moving it here keeps `binding.project_root` untouched.
+    ///
+    /// opencode has no system-prompt flag; its `instructions` field takes a list
+    /// of files whose contents are folded into the system prompt. An absolute
+    /// path to a manas-owned `AGENTS.md` is the injection lever — verified with
+    /// a one-shot run that reported the file's sentinel back from context.
+    fn write_config(binding: &Binding) -> Result<PathBuf> {
+        let dir = Self::opencode_home();
+        std::fs::create_dir_all(&dir)?;
+
+        let instructions_path = dir.join("AGENTS.md");
+        std::fs::write(&instructions_path, instructions::combined())?;
+
+        let config_path = dir.join("opencode.json");
         let config = serde_json::json!({
+            "$schema": "https://opencode.ai/config.json",
+            "instructions": [instructions_path.to_string_lossy()],
             "mcp": {
                 "yojana": {
                     "type": "remote",
@@ -38,7 +65,7 @@ impl HarnessAdapter for OpencodeAdapter {
 
     async fn launch(&self, binding: &Binding, prompt: Option<&str>) -> Result<HarnessHandle> {
         let config_path =
-            Self::write_mcp_config(binding).context("failed to write MCP config for opencode")?;
+            Self::write_config(binding).context("failed to write config for opencode")?;
 
         let mut cmd = Command::new("opencode");
 
