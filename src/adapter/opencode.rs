@@ -34,7 +34,10 @@ impl OpencodeAdapter {
         std::fs::create_dir_all(&dir)?;
 
         let instructions_path = dir.join("AGENTS.md");
-        std::fs::write(&instructions_path, instructions::combined())?;
+        std::fs::write(
+            &instructions_path,
+            instructions::combined_for(instructions::Harness::Opencode),
+        )?;
 
         let config_path = dir.join("opencode.json");
         let config = serde_json::json!({

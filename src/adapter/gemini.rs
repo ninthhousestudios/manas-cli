@@ -26,7 +26,10 @@ impl GeminiCliAdapter {
     fn write_instructions() -> Result<PathBuf> {
         let dir = Self::gemini_home();
         std::fs::create_dir_all(&dir)?;
-        std::fs::write(dir.join("AGENTS.md"), instructions::combined())?;
+        std::fs::write(
+            dir.join("AGENTS.md"),
+            instructions::combined_for(instructions::Harness::Gemini),
+        )?;
         Ok(dir)
     }
 

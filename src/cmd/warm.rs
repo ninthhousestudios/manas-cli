@@ -30,6 +30,12 @@ pub async fn run(harness: &str) -> Result<()> {
     println!("  project:  {}", binding.project_root.display());
     println!("  adapter:  {}", adapter.name());
     println!("  prompt:   {}", crate::instructions::resolve().summary());
+    if let Some(h) = crate::instructions::Harness::from_name(harness) {
+        println!(
+            "  harness:  {}",
+            crate::instructions::resolve_harness(h).summary()
+        );
+    }
 
     // Pre-warm chitta's embedding model while the adapter sets up.
     let chitta_url = binding.chitta_url.clone();

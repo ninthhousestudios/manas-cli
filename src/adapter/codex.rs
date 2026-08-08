@@ -44,7 +44,10 @@ impl CodexCliAdapter {
         let codex_home = Self::codex_home();
         std::fs::create_dir_all(&codex_home)?;
         let path = codex_home.join("AGENTS.md");
-        std::fs::write(&path, instructions::combined())?;
+        std::fs::write(
+            &path,
+            instructions::combined_for(instructions::Harness::Codex),
+        )?;
         Ok(path)
     }
 }

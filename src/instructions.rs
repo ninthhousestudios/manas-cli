@@ -10,11 +10,74 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const BAKED_IN: &str = include_str!("adapter/manas-instructions.md");
-const FILE_NAME: &str = "manas-instructions.md";
-const ENV_OVERRIDE: &str = "MANAS_INSTRUCTIONS";
 const USER_FILE_NAME: &str = "CLAUDE.md";
 const USER_ENV_OVERRIDE: &str = "MANAS_USER_INSTRUCTIONS";
+
+/// A resolvable instructions file: a compiled-in seed, the stable name it lives
+/// under in `~/.manas`, and the env var that overrides its path. The manas
+/// instructions and each harness's own addendum are the same shape, so they
+/// share one resolver instead of a copy of the seed/read/fallback dance apiece.
+struct Spec {
+    baked_in: &'static str,
+    file_name: &'static str,
+    env_override: &'static str,
+}
+
+const MANAS: Spec = Spec {
+    baked_in: include_str!("adapter/manas-instructions.md"),
+    file_name: "manas-instructions.md",
+    env_override: "MANAS_INSTRUCTIONS",
+};
+
+const CODEX: Spec = Spec {
+    baked_in: include_str!("adapter/codex-instructions.md"),
+    file_name: "codex-instructions.md",
+    env_override: "MANAS_CODEX_INSTRUCTIONS",
+};
+
+const GEMINI: Spec = Spec {
+    baked_in: include_str!("adapter/gemini-instructions.md"),
+    file_name: "gemini-instructions.md",
+    env_override: "MANAS_GEMINI_INSTRUCTIONS",
+};
+
+const OPENCODE: Spec = Spec {
+    baked_in: include_str!("adapter/opencode-instructions.md"),
+    file_name: "opencode-instructions.md",
+    env_override: "MANAS_OPENCODE_INSTRUCTIONS",
+};
+
+/// A harness that gets its own instructions addendum on top of the shared manas
+/// instructions — because its native behaviour needs correcting where Claude's
+/// does not (Codex's terse "some bug fixes" commit messages, say).
+#[derive(Clone, Copy)]
+pub enum Harness {
+    Codex,
+    Gemini,
+    Opencode,
+}
+
+impl Harness {
+    fn spec(self) -> &'static Spec {
+        match self {
+            Harness::Codex => &CODEX,
+            Harness::Gemini => &GEMINI,
+            Harness::Opencode => &OPENCODE,
+        }
+    }
+
+    /// Map a `manas warm` harness name to its addendum, if it has one. Claude
+    /// Code has none — it already writes the commit messages these files exist
+    /// to coax out of the others.
+    pub fn from_name(name: &str) -> Option<Harness> {
+        match name {
+            "codex" => Some(Harness::Codex),
+            "gemini" => Some(Harness::Gemini),
+            "opencode" | "oc" => Some(Harness::Opencode),
+            _ => None,
+        }
+    }
+}
 
 /// Where the resolved instructions came from.
 pub enum Source {
@@ -81,13 +144,19 @@ impl Instructions {
 /// session from booting.
 pub fn resolve() -> &'static Instructions {
     static RESOLVED: OnceLock<Instructions> = OnceLock::new();
-    RESOLVED.get_or_init(resolve_uncached)
+    RESOLVED.get_or_init(|| resolve_spec(&MANAS))
 }
 
-fn resolve_uncached() -> Instructions {
-    let mut instructions = match std::env::var_os(ENV_OVERRIDE) {
-        Some(raw) => from_env_override(PathBuf::from(raw)),
-        None => from_default_path(),
+/// Resolve a harness's addendum on its own — for `manas warm` to report where
+/// it resolved from, the same way it reports the manas prompt.
+pub fn resolve_harness(harness: Harness) -> Instructions {
+    resolve_spec(harness.spec())
+}
+
+fn resolve_spec(spec: &Spec) -> Instructions {
+    let mut instructions = match std::env::var_os(spec.env_override) {
+        Some(raw) => from_env_override(spec, PathBuf::from(raw)),
+        None => from_default_path(spec),
     };
     instructions
         .text
@@ -108,6 +177,15 @@ pub fn combined() -> &'static str {
         Some(preamble) => format!("{}\n\n{}", preamble.trim_end(), resolve().text),
         None => resolve().text.clone(),
     })
+}
+
+/// The full on-disk prompt for a harness: the user preamble and manas
+/// instructions [`combined`] gives every harness, plus that harness's own
+/// addendum appended. Each piece carries its own provenance footer, so a stale
+/// session can read exactly which file each part resolved from.
+pub fn combined_for(harness: Harness) -> String {
+    let addendum = resolve_spec(harness.spec());
+    format!("{}\n\n{}", combined().trim_end(), addendum.text)
 }
 
 /// The user's own global instructions, carrying the same kind of provenance
@@ -140,15 +218,16 @@ fn user_preamble() -> Option<String> {
     ))
 }
 
-fn from_env_override(path: PathBuf) -> Instructions {
+fn from_env_override(spec: &Spec, path: PathBuf) -> Instructions {
     match read_file(&path) {
         Ok(instructions) => instructions,
         Err(e) => {
             eprintln!(
-                "  warning:  {ENV_OVERRIDE}={} unreadable ({e}); using compiled-in instructions",
+                "  warning:  {}={} unreadable ({e}); using compiled-in instructions",
+                spec.env_override,
                 path.display()
             );
-            baked_in()
+            baked_in(spec)
         }
     }
 }
@@ -156,10 +235,10 @@ fn from_env_override(path: PathBuf) -> Instructions {
 /// Read `~/.manas/manas-instructions.md`, seeding it from the compiled-in copy
 /// if absent — an editable file the user can discover beats an opt-in path they
 /// have to be told about.
-fn from_default_path() -> Instructions {
-    let Some(path) = default_path() else {
+fn from_default_path(spec: &Spec) -> Instructions {
+    let Some(path) = default_path(spec) else {
         eprintln!("  warning:  HOME not set; using compiled-in instructions");
-        return baked_in();
+        return baked_in(spec);
     };
 
     match read_file(&path) {
@@ -172,16 +251,16 @@ fn from_default_path() -> Instructions {
                 "  warning:  {} is a broken symlink; using compiled-in instructions",
                 path.display()
             );
-            baked_in()
+            baked_in(spec)
         }
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => match seed(&path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => match seed(spec, &path) {
             Ok(instructions) => instructions,
             Err(e) => {
                 eprintln!(
                     "  warning:  could not seed {} ({e}); using compiled-in instructions",
                     path.display()
                 );
-                baked_in()
+                baked_in(spec)
             }
         },
         Err(e) => {
@@ -189,14 +268,14 @@ fn from_default_path() -> Instructions {
                 "  warning:  {} unreadable ({e}); using compiled-in instructions",
                 path.display()
             );
-            baked_in()
+            baked_in(spec)
         }
     }
 }
 
-fn default_path() -> Option<PathBuf> {
+fn default_path(spec: &Spec) -> Option<PathBuf> {
     let home = std::env::var_os("HOME")?;
-    Some(PathBuf::from(home).join(".manas").join(FILE_NAME))
+    Some(PathBuf::from(home).join(".manas").join(spec.file_name))
 }
 
 fn is_symlink(path: &Path) -> bool {
@@ -227,11 +306,11 @@ fn read_file(path: &Path) -> std::io::Result<Instructions> {
     })
 }
 
-fn seed(path: &Path) -> std::io::Result<Instructions> {
+fn seed(spec: &Spec, path: &Path) -> std::io::Result<Instructions> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    std::fs::write(path, BAKED_IN)?;
+    std::fs::write(path, spec.baked_in)?;
 
     let mtime_epoch = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -239,22 +318,22 @@ fn seed(path: &Path) -> std::io::Result<Instructions> {
         .map(|d| d.as_secs());
 
     Ok(Instructions {
-        text: BAKED_IN.to_string(),
+        text: spec.baked_in.to_string(),
         source: Source::File {
             path: path.to_path_buf(),
             seeded: true,
         },
         mtime_epoch,
-        hash: fnv1a64(BAKED_IN.as_bytes()),
+        hash: fnv1a64(spec.baked_in.as_bytes()),
     })
 }
 
-fn baked_in() -> Instructions {
+fn baked_in(spec: &Spec) -> Instructions {
     Instructions {
-        text: BAKED_IN.to_string(),
+        text: spec.baked_in.to_string(),
         source: Source::BakedIn,
         mtime_epoch: None,
-        hash: fnv1a64(BAKED_IN.as_bytes()),
+        hash: fnv1a64(spec.baked_in.as_bytes()),
     }
 }
 
@@ -281,10 +360,10 @@ mod tests {
     fn env_override_reads_the_file() {
         let dir = std::env::temp_dir().join(format!("manas-instr-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join(FILE_NAME);
+        let path = dir.join(MANAS.file_name);
         std::fs::write(&path, "custom instructions\n").unwrap();
 
-        let instructions = from_env_override(path.clone());
+        let instructions = from_env_override(&MANAS, path.clone());
         assert!(instructions.text.contains("custom instructions"));
         assert!(matches!(
             instructions.source,
@@ -298,14 +377,14 @@ mod tests {
     #[test]
     fn missing_env_override_falls_back_to_baked_in() {
         let path = std::env::temp_dir().join("manas-instr-does-not-exist.md");
-        let instructions = from_env_override(path);
+        let instructions = from_env_override(&MANAS, path);
         assert!(matches!(instructions.source, Source::BakedIn));
-        assert_eq!(instructions.text, BAKED_IN);
+        assert_eq!(instructions.text, MANAS.baked_in);
     }
 
     #[test]
     fn footer_carries_source_and_hash() {
-        let instructions = baked_in();
+        let instructions = baked_in(&MANAS);
         let footer = instructions.provenance_footer();
         assert!(footer.contains("source=compiled-in"));
         assert!(footer.contains(&format!("fnv1a64={:016x}", instructions.hash)));
