@@ -1,16 +1,16 @@
 <sutra_mcp>
-For code, use sutra instead of built-in file tools: Glob/find → `sutra_map`, Grep/rg → `sutra_grep`, Read → `sutra_read`. Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
+For code, use sutra instead of built-in file tools: Glob/find → `sutra_map`, Grep/rg → `sutra_grep`, Read a file → `sutra_outline` (its symbols) then `sutra_symbol` (one symbol's source). Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
 
 Exploration protocol (all agents, subagents included):
-1. Any symbol, component, or domain term → `sutra_explore` first. It resolves `.sutra/aliases.toml` domain terms as its top tier, falls through to exact lookup for qualified names (`::`), and returns ranked symbols with literal `sutra_read` fetch instructions plus a strategy hint (read_top_n / read_all / narrow_query / explore_component) — follow the hint rather than reasoning about navigation yourself.
+1. Any symbol, component, or domain term → `sutra_explore` first. It resolves `.sutra/aliases.toml` domain terms as its top tier, falls through to exact lookup for qualified names (`::`), and returns ranked symbols with literal `sutra_symbol` fetch instructions plus a strategy hint (read_top_n / read_all / narrow_query / explore_component) — follow the hint rather than reasoning about navigation yourself.
 2. `sutra_grep`/`sutra_map` only when explore returns nothing or the query is a literal string pattern.
-3. Never `sutra_read` a guessed symbol name — discover it in step 1.
+3. Never `sutra_symbol` a guessed symbol name — discover it in step 1.
 
 `sutra_workspace(path=)` verifies freshness (`action="reparse"` forces a reparse). `sutra_impact` before editing a load-bearing file. `sutra_context(symbol)` packs a symbol's deps + dependents into a token budget — ideal for subagent briefings.
 
 Lessons (`~/.sutra/lessons.db`, cross-project; anchored to technologies and patterns, not projects, so a lesson surfaces wherever its anchors match):
 - **Store**: `sutra_remember(text, anchors)` — anchors are symbol names or file paths; sutra auto-enriches with import patterns and category tags. Store hidden constraints, non-obvious invariants, and failure modes a future editor needs. Not routine facts already visible in the code.
-- **Surface**: lessons appear inline in `sutra_read`, `sutra_impact`, and `sutra_orient` when anchors match; `sutra_lessons(query=)` searches explicitly — run it before writing a new module or component.
+- **Surface**: lessons appear inline in `sutra_symbol`, `sutra_impact`, and `sutra_orient` when anchors match; `sutra_lessons(query=)` searches explicitly — run it before writing a new module or component.
 - **Cite**: `sutra_remember(cite="<lesson_id>", source_tasks=["<task_id>"])` when closing a task that validated one. Citations build confidence; uncited lessons decay and are archived.
 </sutra_mcp>
 
