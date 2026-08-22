@@ -1,9 +1,9 @@
 <sutra_mcp>
-For code, use sutra instead of built-in file tools: Glob/find → `sutra_map`, Grep/rg → `sutra_grep`, Read a file → `sutra_outline` (its symbols) then `sutra_symbol` (one symbol's source). Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
+For code, use sutra instead of built-in file tools: Glob/find → `sutra_map`, find a symbol by name → `sutra_explore`/`sutra_lookup` (NOT a text search — `sutra_lookup` matches symbol *names*, so for file text/comments/string literals use `rg`, and for a symbol's usages/call sites use `sutra_refs`/`sutra_calls`), Read a file → `sutra_outline` (its symbols) then `sutra_symbol` (one symbol's source). Built-in Glob/Grep/Read are for non-code content only — if the guard denies a built-in code tool, use the sutra equivalent.
 
 Exploration protocol (all agents, subagents included):
 1. Any symbol, component, or domain term → `sutra_explore` first. It resolves `.sutra/aliases.toml` domain terms as its top tier, falls through to exact lookup for qualified names (`::`), and returns ranked symbols with literal `sutra_symbol` fetch instructions plus a strategy hint (read_top_n / read_all / narrow_query / explore_component) — follow the hint rather than reasoning about navigation yourself.
-2. `sutra_grep`/`sutra_map` only when explore returns nothing or the query is a literal string pattern.
+2. `sutra_lookup`/`sutra_map` only when explore returns nothing or you have an exact symbol name/pattern (`sutra_lookup` honors `|` alternation); a literal text pattern across file contents is `rg`, not sutra.
 3. Never `sutra_symbol` a guessed symbol name — discover it in step 1.
 
 `sutra_workspace(path=)` verifies freshness (`action="reparse"` forces a reparse). `sutra_impact` before editing a load-bearing file. `sutra_context(symbol)` packs a symbol's deps + dependents into a token budget — ideal for subagent briefings.
@@ -41,7 +41,7 @@ For non-code files (docs, configs, data), prefer `smriti find --path <glob>` ove
 </smriti_cli>
 
 <yojana_issue_tracker>
-Local MCP issue tracker (tasks, state machines, edges, context shapes); systemd user service. Projects nest: `sutra/needs-designing` is a subproject of `sutra`, `adityas/site` of `adityas`.
+Local MCP issue tracker (tasks, state machines, edges, context shapes); systemd user service. Projects nest: `adityas/explore` is a subproject of `sutra`, `adityas/site` of `adityas`.
 
 <triage_discipline>
 When tasks come from an explicit triage process (review, decompose, planning), set status accurately on creation. `needs-triage` means *untriaged*, not *just created*. Status by slice_type:
