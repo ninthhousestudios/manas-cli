@@ -22,7 +22,7 @@ enum Command {
     Health,
     /// Boot a rich session (memory, handoff, task context)
     Warm {
-        /// Harness to launch: claude-code, codex, gemini, opencode
+        /// Harness to launch: claude-code, codex, gemini, grok, opencode
         #[arg(default_value = "claude-code")]
         harness: String,
     },

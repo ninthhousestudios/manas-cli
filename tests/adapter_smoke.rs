@@ -37,6 +37,84 @@ fn warm_prints_session_info_then_fails_without_claude() {
 }
 
 #[test]
+fn warm_grok_writes_overlay_home_then_fails_without_grok() {
+    let home = {
+        let dir = std::env::temp_dir().join(format!("manas-grok-smoke-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("temp home");
+        dir
+    };
+    let grok_user = home.join(".grok");
+    std::fs::create_dir_all(&grok_user).expect("grok home");
+    std::fs::write(grok_user.join("AGENTS.md"), "USER-GLOBAL-AGENTS\n").expect("agents");
+    std::fs::write(grok_user.join("config.toml"), "[ui]\nyolo = false\n").expect("config");
+
+    let bin = env!("CARGO_BIN_EXE_manas");
+    let output = Command::new(bin)
+        .arg("warm")
+        .arg("grok")
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .env("HOME", &home)
+        .env("PATH", "")
+        .env_remove("MANAS_INSTRUCTIONS")
+        .env_remove("MANAS_GROK_INSTRUCTIONS")
+        .output()
+        .expect("failed to run manas");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert!(
+        stdout.contains("adapter:") && stdout.contains("grok"),
+        "expected grok adapter in stdout: {stdout}"
+    );
+    assert!(!output.status.success());
+    assert!(
+        stderr.contains("grok") || stdout.contains("grok"),
+        "expected error mentioning grok: stdout={stdout} stderr={stderr}"
+    );
+
+    let session = stdout
+        .lines()
+        .find_map(|l| l.trim().strip_prefix("session:"))
+        .expect("warm should print a session id")
+        .trim();
+    let scratch = home.join(".manas").join("sessions").join(session);
+    let overlay = scratch.join("grok-home");
+
+    let config = std::fs::read_to_string(overlay.join("config.toml")).expect("overlay config");
+    assert!(config.contains("yolo = false"), "{config}");
+    assert!(config.contains("[mcp_servers.yojana]"), "{config}");
+    assert!(config.contains("[mcp_servers.sutra]"), "{config}");
+
+    let agents_meta =
+        std::fs::symlink_metadata(overlay.join("AGENTS.md")).expect("overlay AGENTS.md");
+    assert!(
+        agents_meta.file_type().is_symlink(),
+        "user AGENTS.md should be symlinked, not copied"
+    );
+
+    let user_agents = std::fs::read_to_string(grok_user.join("AGENTS.md")).expect("user agents");
+    assert_eq!(user_agents, "USER-GLOBAL-AGENTS\n");
+    let user_config = std::fs::read_to_string(grok_user.join("config.toml")).expect("user config");
+    assert!(
+        !user_config.contains("yojana"),
+        "bare grok config must stay untouched: {user_config}"
+    );
+
+    let rules = std::fs::read_to_string(overlay.join("rules").join("manas.md")).expect("rules");
+    assert!(rules.contains("sutra"), "{rules}");
+    assert!(
+        rules.contains("grok_tool_surface") && rules.contains("Co-Authored-By: Grok"),
+        "{rules}"
+    );
+
+    let injected =
+        std::fs::read_to_string(scratch.join("manas-instructions.md")).expect("scratch copy");
+    assert_eq!(injected, rules);
+}
+
+#[test]
 fn health_checks_services() {
     let bin = env!("CARGO_BIN_EXE_manas");
     let output = Command::new(bin)

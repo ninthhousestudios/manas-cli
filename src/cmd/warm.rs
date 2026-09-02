@@ -3,6 +3,7 @@ use anyhow::{Result, bail};
 use crate::adapter::claude_code::ClaudeCodeAdapter;
 use crate::adapter::codex::CodexCliAdapter;
 use crate::adapter::gemini::GeminiCliAdapter;
+use crate::adapter::grok::GrokAdapter;
 use crate::adapter::opencode::OpencodeAdapter;
 use crate::adapter::{self, HarnessAdapter};
 use crate::binding::Binding;
@@ -18,8 +19,11 @@ pub async fn run(harness: &str) -> Result<()> {
         "claude-code" | "cc" => Box::new(ClaudeCodeAdapter),
         "codex" => Box::new(CodexCliAdapter),
         "gemini" => Box::new(GeminiCliAdapter),
+        "grok" => Box::new(GrokAdapter),
         "opencode" | "oc" => Box::new(OpencodeAdapter),
-        _ => bail!("unknown harness: {harness} (expected: claude-code, codex, gemini, opencode)"),
+        _ => bail!(
+            "unknown harness: {harness} (expected: claude-code, codex, gemini, grok, opencode)"
+        ),
     };
 
     println!("manas warm — booting rich session");

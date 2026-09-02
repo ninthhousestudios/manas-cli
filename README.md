@@ -18,7 +18,7 @@ Check connectivity to all manas subsystems (chitta, yojana, sangha, smriti, sutr
 
 ### `manas warm [harness]`
 
-Boot a rich session — loads memory, handoff context, and task state, then launches the specified harness. Supported harnesses: `claude-code` (default), `codex`, `gemini`, `opencode`.
+Boot a rich session — loads memory, handoff context, and task state, then launches the specified harness. Supported harnesses: `claude-code` (default), `codex`, `gemini`, `grok`, `opencode`.
 
 ### `manas done`
 
@@ -47,17 +47,18 @@ manas-cli includes adapter modules for launching different AI coding agents with
 - **Claude Code** — default, streamable-HTTP MCP. Injects manas session-lifecycle instructions via `--append-system-prompt-file` so they apply to the top-level session but not to subagents.
 - **Codex** — OpenAI Codex CLI
 - **Gemini** — Google Gemini CLI
+- **Grok** — xAI Grok CLI. Session-scoped `GROK_HOME` overlay so bare `grok` keeps `~/.grok/AGENTS.md` and no manas MCP.
 - **OpenCode** — open-source alternative
 
 ### Instruction split
 
-Session-lifecycle instructions (sangha registration, chitta health checks, sutra/smriti tool preferences, yojana discipline, observation protocol) are injected at launch via `--append-system-prompt-file`. This means:
+Session-lifecycle instructions (sangha registration, chitta health checks, sutra/smriti tool preferences, yojana discipline, observation protocol) are injected at launch. Claude Code uses `--append-system-prompt-file`; Grok has no equivalent flag, so the same bytes land in `$GROK_HOME/rules/manas.md` of a manas-owned overlay home. This means:
 
-- `manas warm claude` — top-level session gets full manas operating instructions + MCP servers
-- `claude` (bare) — no manas instructions, no manas MCP servers
-- Subagents spawned via the Agent tool — inherit MCP tool access but **not** the appended system prompt, so they won't perform session-lifecycle rituals
+- `manas warm claude` / `manas warm grok` — session gets full manas operating instructions + MCP servers
+- `claude` / `grok` (bare) — no manas instructions, no manas MCP servers
+- Claude subagents inherit MCP tool access but **not** the appended system prompt, so they won't perform session-lifecycle rituals. Grok subagents see `$GROK_HOME/rules/` (Grok has no top-level-only prompt flag).
 
-General-purpose instructions (personality, naming conventions, commit discipline) stay in `~/CLAUDE.md` and are visible to all sessions including subagents.
+General-purpose instructions (personality, naming conventions, commit discipline) stay in `~/CLAUDE.md` (Claude) or `~/.grok/AGENTS.md` (Grok) and are visible to all sessions including subagents.
 
 ### Where the instructions are read from
 

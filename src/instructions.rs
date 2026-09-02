@@ -47,13 +47,21 @@ const OPENCODE: Spec = Spec {
     env_override: "MANAS_OPENCODE_INSTRUCTIONS",
 };
 
+const GROK: Spec = Spec {
+    baked_in: include_str!("adapter/grok-instructions.md"),
+    file_name: "grok-instructions.md",
+    env_override: "MANAS_GROK_INSTRUCTIONS",
+};
+
 /// A harness that gets its own instructions addendum on top of the shared manas
 /// instructions — because its native behaviour needs correcting where Claude's
-/// does not (Codex's terse "some bug fixes" commit messages, say).
+/// does not (Codex's terse "some bug fixes" commit messages, Grok's Claude-shaped
+/// tool names, say).
 #[derive(Clone, Copy)]
 pub enum Harness {
     Codex,
     Gemini,
+    Grok,
     Opencode,
 }
 
@@ -62,17 +70,19 @@ impl Harness {
         match self {
             Harness::Codex => &CODEX,
             Harness::Gemini => &GEMINI,
+            Harness::Grok => &GROK,
             Harness::Opencode => &OPENCODE,
         }
     }
 
     /// Map a `manas warm` harness name to its addendum, if it has one. Claude
     /// Code has none — it already writes the commit messages these files exist
-    /// to coax out of the others.
+    /// to coax out of the others, and its tool names need no translation.
     pub fn from_name(name: &str) -> Option<Harness> {
         match name {
             "codex" => Some(Harness::Codex),
             "gemini" => Some(Harness::Gemini),
+            "grok" => Some(Harness::Grok),
             "opencode" | "oc" => Some(Harness::Opencode),
             _ => None,
         }
