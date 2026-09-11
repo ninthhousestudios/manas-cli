@@ -9,7 +9,7 @@ Exploration protocol (all agents, subagents included):
 `sutra_workspace(path=)` verifies freshness (`action="reparse"` forces a reparse). `sutra_impact` before editing a load-bearing file. `sutra_context(symbol)` packs a symbol's deps + dependents into a token budget — ideal for subagent briefings.
 
 Lessons (`~/.sutra/lessons.db`, cross-project; anchored to technologies and patterns, not projects, so a lesson surfaces wherever its anchors match):
-- **Store**: `sutra_remember(text, anchors)` — anchors are symbol names or file paths; sutra auto-enriches with import patterns and category tags. Store hidden constraints, non-obvious invariants, and failure modes a future editor needs. Not routine facts already visible in the code.
+- **Store**: `sutra_remember(text, anchors)` — anchors are symbol names or file paths; sutra auto-enriches with import patterns and category tags. Store hidden constraints, non-obvious invariants, and failure modes a future editor needs. Not routine facts already visible in the code, and not project state that changes as the work progresses (which function is which, what a seam currently does, a model you expect to revise): that belongs in the project's docs. If a lesson would need a "SUPERSEDES lesson X" successor, it was a doc entry; when a stored lesson is falsified, anti-verify it and fix the doc.
 - **Surface**: lessons appear inline in `sutra_symbol`, `sutra_impact`, and `sutra_orient` when anchors match; `sutra_lessons(query=)` searches explicitly — run it before writing a new module or component.
 - **Cite**: `sutra_remember(cite="<lesson_id>", source_tasks=["<task_id>"])` when closing a task that validated one. Citations build confidence; uncited lessons decay and are archived.
 </sutra_mcp>
