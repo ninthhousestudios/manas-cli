@@ -65,7 +65,7 @@ Close-out fields are mined by vidhi-reflect for cross-project lessons — write 
 - `wontfix` requires a closing comment saying why — rejected approaches are negative knowledge worth as much as fixes.
 - Set category at creation (bug/enhancement/experiment). A bug found and fixed mid-review is still category=bug.
 - decisions entries carry rationale and the strongest rejected alternative.
-- done means landed. Branch unmerged, service not redeployed, or a verification step pending at close? Say so in execution_record AND file the follow-up task — closing over silent pending work is the gap (yojana/32-33, justifier/1, swisseph.dart/2).
+- done means landed. Branch unmerged, service not redeployed, or a verification step pending at close? Say so in execution_record AND file the follow-up task — closing over silent pending work is the gap (yojana/32-33, justifier/1, swisseph.dart/2). Exception: routine rebuild/reinstall/restart to make landed code live — note it in execution_record and remind Josh in the reply, but never file a task for it (sutra/488).
 </capture_discipline>
 
 </yojana_issue_tracker>
