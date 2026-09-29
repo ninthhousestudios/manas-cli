@@ -5,11 +5,11 @@ For text search in Bash prefer `rg` (ripgrep) over `grep`: faster, respects `.gi
 
 Exploration (all agents, subagents included): lead with `sutra_explore`; follow its strategy hint (read_top_n / read_all / narrow_query / explore_component) rather than reasoning about navigation yourself, and never `sutra_symbol` a guessed name — discover it via explore first. For a symbol's usages/call sites use `sutra_refs`/`sutra_calls`.
 
-`sutra_workspace(path=)` verifies freshness (`action="reparse"` forces a reparse). `sutra_context(symbol)` packs a symbol's deps + dependents into a token budget — ideal for subagent briefings.
+`sutra_workspace(path=)` verifies freshness (`action="reparse"` forces a reparse).
 
 Lessons (`~/.sutra/lessons.db`, cross-project; anchored to technologies and patterns, not projects, so a lesson surfaces wherever its anchors match):
 - **Store**: `sutra_remember(text, location_anchors)` — location_anchors are symbol names or file paths; sutra auto-enriches with import patterns and category tags. Store hidden constraints, non-obvious invariants, and failure modes a future editor needs. Not routine facts already visible in the code, and not project state that changes as the work progresses (which function is which, what a seam currently does, a model you expect to revise): that belongs in the project's docs. If a lesson would need a "SUPERSEDES lesson X" successor, it was a doc entry; when a stored lesson is falsified, anti-verify it and fix the doc.
-- **Surface**: lessons appear inline in `sutra_symbol`, `sutra_impact`, and `sutra_orient` when anchors match; `sutra_lessons(query=)` searches explicitly — run it before writing a new module or component.
+- **Surface**: lessons appear inline in `sutra_symbol` and `sutra_impact` when anchors match; `sutra_lessons(query=)` searches explicitly — run it before writing a new module or component.
 - **Cite**: `sutra_remember(cite="<lesson_id>", source_tasks=["<task_id>"])` when closing a task that validated one. Citations build confidence; uncited lessons decay and are archived.
 </sutra_mcp>
 

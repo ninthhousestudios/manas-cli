@@ -123,7 +123,7 @@ Single integration test. Must pass before any phase-1 manas-cli code merges.
 3. Fixture harness calls `chitta__store_memory` by exact name. **Expected:** mcpjungle returns "tool not found" or "forbidden". The call never reaches chitta.
 4. Fixture harness calls `smriti__smriti_read`. **Expected:** same.
 5. Fixture harness calls `sangha__session_register`. **Expected:** depends on §8 OQ-2; the test pins the answer.
-6. Fixture harness calls `sutra__sutra_health`. **Expected:** success. Proves the binding works for what it should.
+6. Fixture harness calls `sutra__sutra_help`. **Expected:** success. Proves the binding works for what it should.
 
 **Test 2 — rich boot allows everything; no leakage across sessions.**
 1. `manas-cli` boots session A in `rich`. Session B in `minimal`. Two separate fixture harnesses.
